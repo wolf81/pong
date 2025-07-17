@@ -1,0 +1,22 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Serve",
+            "command": "npm",
+            "type": "shell",
+            "args": ["run", "dev"],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "close": true,
+                "revealProblems": "onProblem",
+            },
+            "isBackground": true,
+            "problemMatcher": [],
+            "auto": true, // relies on AutoLaunch extension
+        },
+    ]
+} 
