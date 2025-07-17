@@ -1,22 +1,19 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Serve",
-            "command": "npm",
-            "type": "shell",
-            "args": ["run", "dev"],
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "close": true,
-                "revealProblems": "onProblem",
-            },
-            "isBackground": true,
-            "problemMatcher": [],
-            "auto": true, // relies on AutoLaunch extension
-        },
-    ]
-} 
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build",
+      "type": "shell",
+      "command": "npm run build",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev Server",
+      "type": "shell",
+      "command": "npm run dev",
+      "isBackground": true,
+      "problemMatcher": "$tsc-watch"
+    }
+  ]
+}

@@ -1,22 +1,33 @@
-# Template for a static web app based on HTML, CSS & TypeScript
+# Pong
 
-The goal of this project is to have a very simple way to get started building static websites. I want to rely on as little dependencies as possible, while still providing a good developer experience. 
+A Pong implementation in TypeScript with no other dependencies.
 
-This project contains the bare minimum to get started, the features are:
+The goal of this project is to get experience with game development using HTML
+5 Canvas & TypeScript, without any other dependencies.
 
-* Plain HTML, CSS, JavaScript
-* Live debugging
-* VS Code support
+All assets in this project are free for non-commercial use. I've used graphical
+and audio assets from [Kenney](https://kenney.nl/) and the Jumpman font from
+[Pixel Saga](http://www.pixelsagas.com).
 
-## Getting Started
+The lib/ directory contains code that I plan to share across my own projects.
+Hopefully in time this code will be part of a proper library that is at least
+well suited to my own needs. Included in the lib/ directory are the following
+modules:
 
-In order to get started with this template, ensure `npm` is installed on your machine.
+- SceneManager: manages scene drawing, updates and transitions.
+- ServiceLocator: register and use services everywhere in the app.
+- Renderer: centralized rendering in order to keep track of draw calls.
+- Shape: shapes used for basic collision detection.
+- Tidy: UI layout library [based on this Python example](https://forums.4fips.com/viewtopic.php?f=3&t=6896).
+- Timer: a timer that schedules actions to run in the future.
+- Heap: a collection used in Timer, to order actions based on time.
+- Runloop: manages the game runloop, ensuring updates are called at regular
+  intervals regardless of frame drops.
+- AssetLoader: load audio and image assets automatically using a manifest.json
+  file that contains file paths.
+- Vector: a 2D vector class with some mathematical functions.
+- Size: a class that represents a width & height.
 
-When running in VS Code, the template supports JavaScript Debugging.
-
-Then:
-
-```sh
-$ npm install # install dependencies - only needed first time
-$ npm run dev # edit files & get live updates!
-```
+For convenience with regards to AssetLoader, the scripts/ directory includes a
+script that can be used to generate a manifest.json file from the public/assets/
+directory contents.
