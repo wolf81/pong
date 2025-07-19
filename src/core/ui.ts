@@ -50,11 +50,19 @@ export enum ControlState {
 
 type FontFamily = "Jumpman";
 type Drawable = HTMLCanvasElement | HTMLImageElement;
+type Mouse = {
+  pos: Vector;
+  buttonState: "none" | "down" | "up";
+};
 
 export enum ControlState {
+  // Default state when no interactions happen inside the control.
   Normal,
+  // Hover & highlight state, e.g. when mouse is hovering over the control.
   Hover,
+  // Active & selected state, e.g. when mouse is pressed inside the control.
   Active,
+  // Disabled state, no interaction possible.
   Disabled,
 }
 
