@@ -48,10 +48,27 @@ export enum ControlState {
   Disabled,
 }
 
+type FontFamily = "Jumpman";
+
+export enum ControlState {
+  Default,
+  Hover,
+  Active,
+  Disabled,
+}
+
 export abstract class Control implements Layoutable {
   private _state: ControlState = ControlState.Normal;
 
   protected _frame: Rect = Shape.rect(0, 0, 0, 0);
+
+  get state(): ControlState {
+    return this._state;
+  }
+
+  setState(state: ControlState) {
+    this._state = state;
+  }
 
   get state(): ControlState {
     return this._state;

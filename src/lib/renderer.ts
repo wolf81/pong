@@ -1,6 +1,6 @@
 type Drawable = HTMLCanvasElement | HTMLImageElement;
 
-type TextAlign = "left" | "right" | "center";
+export type TextAlign = "left" | "right" | "center";
 
 /**
  * Use the Renderer class to draw graphics and text on the canvas.
@@ -52,6 +52,12 @@ export class Renderer {
   drawImage(image: Drawable, x: number, y: number) {
     this._draws += 1;
     this._ctx.drawImage(image, x, y);
+  }
+
+  measureText(text: string, font: string): TextMetrics {
+    // TODO: Maybe cache a number of texts/fonts.
+    this._ctx.font = font;
+    return this._ctx.measureText(text);
   }
 
   /**
