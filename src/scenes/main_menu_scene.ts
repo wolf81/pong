@@ -26,6 +26,11 @@ function showInstructions() {
   sceneManager.push(new InstructionsScene());
 }
 
+function startGame() {
+  const sceneManager = ServiceLocator.resolve(SceneManager);
+  sceneManager.pop();
+}
+
 export class MainMenuScene extends Scene {
   private _layout: Layout<Control> = Tidy.border([
     UI.panel(),

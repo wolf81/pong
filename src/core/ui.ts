@@ -55,6 +55,13 @@ type Mouse = {
   buttonState: "none" | "down" | "up";
 };
 
+type LabelOptions = {
+  font: FontFamily;
+  size: number;
+  textColor: string;
+};
+type ButtonOptions = LabelOptions & { onClick: () => void };
+
 export enum ControlState {
   // Default state when no interactions happen inside the control.
   Normal,
