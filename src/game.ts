@@ -6,6 +6,7 @@ import { ServiceLocator } from "./lib/service_locator";
 import { GamePlayScene } from "./scenes/game_play_scene";
 import { Settings } from "./settings";
 import { MainMenuScene } from "./scenes/main_menu_scene";
+import { UI } from "./core/ui";
 
 /**
  * The Game class contains the core game logic.
@@ -20,6 +21,8 @@ export class Game {
 
     this._sceneManager = new SceneManager(canvas.width, canvas.height);
     ServiceLocator.register(SceneManager, this._sceneManager);
+
+    UI.init(canvas);
   }
 
   async init(): Promise<void> {
@@ -39,6 +42,8 @@ export class Game {
     }
 
     this._inputListener.update();
+
+    UI.update();
   }
 
   draw(renderer: Renderer) {

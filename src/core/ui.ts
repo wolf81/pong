@@ -9,11 +9,19 @@ import { Vector } from "../math/vector";
 
 type FontFamily = "Jumpman";
 type Drawable = HTMLCanvasElement | HTMLImageElement;
+type Mouse = {
+  pos: Vector;
+  buttonState: "none" | "down" | "up";
+};
 
 export enum ControlState {
+  // Default state when no interactions happen inside the control.
   Normal,
+  // Hover & highlight state, e.g. when mouse is hovering over the control.
   Hover,
+  // Active & selected state, e.g. when mouse is pressed inside the control.
   Active,
+  // Disabled state, no interaction possible.
   Disabled,
 }
 
@@ -137,19 +145,23 @@ export class Button extends Label {
 
     const assetLoader = ServiceLocator.resolve(AssetLoader);
 
-    let normalImage: Drawable = assetLoader.getImage("button_square_gloss");
-    normalImage = TextureHelper.stretch(normalImage, rect.w, rect.h);
-    this._stateBackgrounds.set(ControlState.Normal, normalImage);
+    const stateImageInfo: Map<ControlState, string> = new Map<
+      ControlState,
+      string
+    >([
+      [ControlState.Normal, "button_square_depth_flat"],
+      [ControlState.Hover, "button_square_depth_gloss"],
+      [ControlState.Active, "button_square_gloss"],
+      [ControlState.Disabled, "button_square_depth_flat"],
+    ]);
 
-    let hoverImage: Drawable = assetLoader.getImage(
-      "button_square_depth_gloss"
-    );
-    hoverImage = TextureHelper.stretch(hoverImage, rect.w, rect.h);
-    this._stateBackgrounds.set(ControlState.Hover, hoverImage);
+    for (let [state, imageName] of stateImageInfo) {
+      let image: Drawable = assetLoader.getImage(imageName);
+      image = TextureHelper.stretch(image, rect.w, rect.h);
+      this._stateBackgrounds.set(state, image);
+    }
 
     this._background = this._stateBackgrounds.get(ControlState.Normal)!;
-
-    this.setState(ControlState.Normal);
   }
 
   override setState(state: ControlState): void {
@@ -158,7 +170,17 @@ export class Button extends Label {
     this._background = this._stateBackgrounds.get(this.state)!;
   }
 
-  update(dt: number): void {}
+  update(dt: number): void {
+    this.setState(ControlState.Normal);
+
+    if (this._frame.containsPoint(UI.mouse.pos)) {
+      const state =
+        UI.mouse.buttonState === "down"
+          ? ControlState.Active
+          : ControlState.Hover;
+      this.setState(state);
+    }
+  }
 
   draw(renderer: Renderer): void {
     renderer.drawImage(this._background, this._frame.x, this._frame.y);
@@ -168,10 +190,6 @@ export class Button extends Label {
 }
 
 export class UI {
-  static mouse: {
-    x: number;
-  };
-
   static panel(): Elem<Panel> {
     return Tidy.elem(new Panel(), {
       minSize: { w: 0, h: 0 },
@@ -199,4 +217,39 @@ export class UI {
       stretch: "horizontal",
     });
   }
+
+  //#region Input Handling
+
+  private static _mouse: Mouse = {
+    pos: Vector.zero,
+    buttonState: "none",
+  };
+
+  static get mouse(): Mouse {
+    return this._mouse;
+  }
+
+  static init(canvas: HTMLCanvasElement) {
+    window.addEventListener("mousedown", (e) => {
+      this._mouse.buttonState = "down";
+    });
+
+    window.addEventListener("mouseup", (e) => {
+      this._mouse.buttonState = "up";
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      this._mouse.pos.x = e.clientX - rect.left;
+      this._mouse.pos.y = e.clientY - rect.top;
+    });
+  }
+
+  static update() {
+    if (this._mouse.buttonState === "up") {
+      this._mouse.buttonState = "none";
+    }
+  }
+
+  //#endregion
 }

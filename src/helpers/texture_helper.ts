@@ -1,6 +1,13 @@
 type Drawable = HTMLImageElement | HTMLCanvasElement;
 
 export class TextureHelper {
+  /**
+   * Generate a texture.
+   * @param w The target width, in pixels.
+   * @param h The target height, in pixels.
+   * @param onDraw Use this function to draw on the context.
+   * @returns A HTML canvas with the generated texture.
+   */
   static generate(
     w: number,
     h: number,

@@ -43,6 +43,8 @@ export abstract class Shape {
   }
 
   abstract intersects(shape: Shape): boolean;
+
+  abstract containsPoint(v: Vector): boolean;
 }
 
 export class Rect extends Shape {
@@ -101,6 +103,10 @@ export class Rect extends Shape {
 
     throw new Error(`Intersect check not implemented for ${shape}.`);
   }
+
+  containsPoint(v: Vector): boolean {
+    return v.x >= this.x1 && v.x <= this.x2 && v.y >= this.y1 && v.y <= this.y2;
+  }
 }
 
 export class Circle extends Shape {
@@ -130,5 +136,11 @@ export class Circle extends Shape {
     }
 
     throw new Error(`Intersect check not implemented for ${shape}.`);
+  }
+
+  containsPoint(v: Vector): boolean {
+    const dx = this.xMid - v.x;
+    const dy = this.yMid - v.y;
+    return dx * dx + dy * dy <= Math.pow(this.radius, 2);
   }
 }
