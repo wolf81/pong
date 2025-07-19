@@ -84,6 +84,8 @@ export class Renderer {
     }
 
     const metrics = this._ctx.measureText(text);
+    const h =
+      metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
     switch (options.align) {
       case "center":
         x -= metrics.width / 2;
@@ -95,6 +97,6 @@ export class Renderer {
 
     this._draws += 1;
     this._ctx.fillStyle = options.color ?? "#ffffff";
-    this._ctx.fillText(text, x, y);
+    this._ctx.fillText(text, x, y + h / 2);
   }
 }

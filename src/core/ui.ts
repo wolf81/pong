@@ -49,9 +49,10 @@ export enum ControlState {
 }
 
 type FontFamily = "Jumpman";
+type Drawable = HTMLCanvasElement | HTMLImageElement;
 
 export enum ControlState {
-  Default,
+  Normal,
   Hover,
   Active,
   Disabled,
