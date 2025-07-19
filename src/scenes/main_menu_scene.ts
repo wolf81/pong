@@ -9,9 +9,17 @@ export class MainMenuScene extends Scene {
     UI.panel(),
     Tidy.border(
       [
-        Tidy.vstack([UI.label(), UI.button(), UI.button(), UI.button()], {
-          spacing: 20,
-        }),
+        Tidy.vstack<Control>(
+          [
+            UI.label("Pong!", { size: 40 }),
+            UI.button("Start"),
+            UI.button("Settings"),
+            UI.button("Quit"),
+          ],
+          {
+            spacing: 20,
+          }
+        ),
       ],
       {
         margin: Tidy.margin(16),
@@ -23,7 +31,7 @@ export class MainMenuScene extends Scene {
     super();
 
     const w = 300;
-    const h = 312;
+    const h = 48 + 64 * 3 + 20 * 3 + 32;
     const x = (CANVAS_W - w) / 2;
     const y = (CANVAS_H - h) / 2;
     this._layout.reshape(x, y, w, h);

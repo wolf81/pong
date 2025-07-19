@@ -2,6 +2,7 @@
   "name": "static-website-template",
   "description": "Static website template based on HTML, CSS & TypeScript - with live browser updates.",
   "version": "1.0.0",
+  "type": "module",
   "main": "main.js",
   "scripts": {
     "dev": "vite",

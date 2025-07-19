@@ -2,7 +2,7 @@ import { CANVAS_H, CANVAS_W } from "../constants";
 import { Paddle, Ball } from "../core/entity";
 import { Direction, Player } from "../core/types";
 import { Renderer } from "../lib/renderer";
-import { TextureGenerator } from "../helpers/texture_gen";
+import { TextureHelper } from "../helpers/texture_helper";
 import { AssetLoader } from "../lib/asset_loader";
 import { InputListener } from "../lib/input_listener";
 import { Scene } from "../lib/scene_manager";
@@ -78,7 +78,7 @@ export class GamePlayScene extends Scene {
   async init(): Promise<void> {
     const assetLoader = ServiceLocator.resolve(AssetLoader);
     const image = assetLoader.getImage("texture_08");
-    this._background = TextureGenerator.generate(CANVAS_W, CANVAS_H, (ctx) => {
+    this._background = TextureHelper.generate(CANVAS_W, CANVAS_H, (ctx) => {
       for (let x = 0; x < ctx.canvas.width; x += image.width) {
         for (let y = 0; y < ctx.canvas.height; y += image.height) {
           ctx.drawImage(image, x, y);
