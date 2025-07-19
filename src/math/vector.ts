@@ -32,4 +32,8 @@ export class Vector {
     const y = this.y + (v.y - this.y) * alpha;
     return new Vector(x, y);
   }
+
+  clone(): Vector {
+    return new Vector(this.x, this.y);
+  }
 }

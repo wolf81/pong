@@ -1,6 +1,6 @@
 import { TextureHelper } from "../helpers/texture_helper";
 import { AssetLoader } from "../lib/asset_loader";
-import { Renderer, TextAlign } from "../lib/renderer";
+import { Renderer } from "../lib/renderer";
 import { ServiceLocator } from "../lib/service_locator";
 import { Rect } from "../lib/shape";
 import { Elem, Tidy, Layoutable } from "../lib/tidy";
@@ -13,6 +13,13 @@ type Mouse = {
   pos: Vector;
   buttonState: "none" | "down" | "up";
 };
+
+type LabelOptions = {
+  font: FontFamily;
+  size: number;
+  textColor: string;
+};
+type ButtonOptions = LabelOptions & { onClick: () => void };
 
 export enum ControlState {
   // Default state when no interactions happen inside the control.
@@ -62,14 +69,7 @@ export class Label extends Control {
   private _textColor: string;
   private _fontSize: number;
 
-  constructor(
-    text: string,
-    options?: Partial<{
-      font: FontFamily;
-      size: number;
-      textColor: string;
-    }>
-  ) {
+  constructor(text: string, options?: Partial<LabelOptions>) {
     super();
 
     this._text = text;
@@ -119,20 +119,17 @@ export class Panel extends Control {
 
 export class Button extends Label {
   private _background!: Drawable;
+  private _onClick: () => void;
 
   private _stateBackgrounds: Map<ControlState, Drawable> = new Map<
     ControlState,
     Drawable
   >();
 
-  constructor(
-    title: string,
-    options?: Partial<{
-      font: FontFamily;
-      size: number;
-    }>
-  ) {
+  constructor(title: string, options?: Partial<ButtonOptions>) {
     super(title, options);
+
+    this._onClick = options?.onClick ? options.onClick : () => {};
   }
 
   override setFrame(rect: {
@@ -171,14 +168,26 @@ export class Button extends Label {
   }
 
   update(dt: number): void {
-    this.setState(ControlState.Normal);
+    const isHit = this._frame.containsPoint(UI.mouse.pos);
+    const isPress = isHit && UI.mouse.buttonState === "down";
+    const isRelease =
+      this.state === ControlState.Active && UI.mouse.buttonState === "up";
 
-    if (this._frame.containsPoint(UI.mouse.pos)) {
+    if (!isHit) {
+      this.setState(ControlState.Normal);
+    }
+
+    if (isPress && !isRelease) {
       const state =
         UI.mouse.buttonState === "down"
           ? ControlState.Active
           : ControlState.Hover;
       this.setState(state);
+    }
+
+    if (isRelease) {
+      this._onClick();
+      this.setState(ControlState.Normal);
     }
   }
 
@@ -197,28 +206,19 @@ export class UI {
     });
   }
 
-  static label(
-    text: string,
-    options?: Partial<{
-      font: FontFamily;
-      size: number;
-      textColor: string;
-    }>
-  ): Elem<Label> {
+  static label(text: string, options?: Partial<LabelOptions>): Elem<Label> {
     return Tidy.elem(new Label(text, options), {
       minSize: { w: 0, h: 48 },
       stretch: "horizontal",
     });
   }
 
-  static button(title: string, options?: Partial<{}>): Elem<Button> {
+  static button(title: string, options?: Partial<ButtonOptions>): Elem<Button> {
     return Tidy.elem(new Button(title, options), {
       minSize: { w: 192, h: 64 },
       stretch: "horizontal",
     });
   }
-
-  //#region Input Handling
 
   private static _mouse: Mouse = {
     pos: Vector.zero,
@@ -250,6 +250,4 @@ export class UI {
       this._mouse.buttonState = "none";
     }
   }
-
-  //#endregion
 }

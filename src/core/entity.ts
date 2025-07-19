@@ -5,6 +5,11 @@ import { Vector } from "../math/vector";
 import { Circle, Rect, Shape } from "../lib/shape";
 import { Player } from "./types";
 
+/**
+ * Base speed for both paddle & ball in pixels per second.
+ */
+const BASE_SPEED = 60;
+
 export abstract class Entity {
   protected _prevPos: Vector;
 
@@ -21,11 +26,13 @@ export abstract class Entity {
     this.sprite = texture;
 
     this.pos = pos ?? Vector.zero;
-    this._prevPos = this.pos;
+    this._prevPos = this.pos.clone();
     this.size = new Size(texture.width, texture.height);
   }
 
-  abstract update(dt: number): void;
+  update(dt: number): void {
+    this._prevPos = this.pos.clone();
+  }
 
   draw(renderer: Renderer) {
     const pos = this.prevPos.lerp(this.pos, SimulationTimer.alpha);
@@ -40,11 +47,10 @@ export abstract class Actor<T extends Shape> extends Entity {
   abstract get shape(): T;
 
   update(dt: number): void {
-    this._prevPos = this.pos;
+    super.update(dt);
 
-    const dxy = this.dir.mul(this.speed * 60 * dt);
+    const dxy = this.dir.mul(this.speed * BASE_SPEED * dt);
     this.pos = this.pos.add(dxy);
-
     this.shape.pos = this.pos;
   }
 

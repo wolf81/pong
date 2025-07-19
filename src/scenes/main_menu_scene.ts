@@ -1,8 +1,14 @@
 import { CANVAS_H, CANVAS_W } from "../constants";
 import { Control, UI } from "../core/ui";
 import { Renderer } from "../lib/renderer";
-import { Scene } from "../lib/scene_manager";
+import { Scene, SceneManager } from "../lib/scene_manager";
+import { ServiceLocator } from "../lib/service_locator";
 import { Layout, Tidy } from "../lib/tidy";
+
+function startGame() {
+  const sceneManager = ServiceLocator.resolve(SceneManager);
+  sceneManager.pop();
+}
 
 export class MainMenuScene extends Scene {
   private _layout: Layout<Control> = Tidy.border([
@@ -12,7 +18,7 @@ export class MainMenuScene extends Scene {
         Tidy.vstack<Control>(
           [
             UI.label("Pong!", { size: 40, textColor: "#ee2747" }),
-            UI.button("Start", { size: 32 }),
+            UI.button("Start", { size: 32, onClick: () => startGame() }),
             UI.button("Settings", { size: 32 }),
             UI.button("Quit", { size: 32 }),
           ],
@@ -30,6 +36,9 @@ export class MainMenuScene extends Scene {
   constructor() {
     super();
 
+    // Create the menu panel in the center of the screen.
+    // The contents will automatically stretch to fit width, but we need to
+    // determine height manually in this case.
     const w = 300;
     const h = 48 + 64 * 3 + 20 * 3 + 32;
     const x = (CANVAS_W - w) / 2;

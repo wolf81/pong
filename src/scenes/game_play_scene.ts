@@ -18,25 +18,17 @@ function newPaddle(player: Player): Paddle {
 
   switch (player) {
     case Player.One: {
-      const paddle = new Paddle(
-        assetLoader.getImage("paddleBlu"),
-        Vector.zero,
-        Player.One
-      );
-      paddle.pos = new Vector(PADDLE_MARGIN, (CANVAS_H - paddle.size.h) / 2);
-      return paddle;
+      const sprite = assetLoader.getImage("paddleBlu");
+      const pos = new Vector(PADDLE_MARGIN, (CANVAS_H - sprite.height) / 2);
+      return new Paddle(sprite, pos, Player.One);
     }
     case Player.Two: {
-      const paddle = new Paddle(
-        assetLoader.getImage("paddleRed"),
-        Vector.zero,
-        Player.Two
+      const sprite = assetLoader.getImage("paddleRed");
+      const pos = new Vector(
+        CANVAS_W - sprite.width - PADDLE_MARGIN,
+        (CANVAS_H - sprite.height) / 2
       );
-      paddle.pos = new Vector(
-        CANVAS_W - paddle.size.w - PADDLE_MARGIN,
-        (CANVAS_H - paddle.size.h) / 2
-      );
-      return paddle;
+      return new Paddle(sprite, pos, Player.Two);
     }
   }
 }
