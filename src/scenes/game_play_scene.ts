@@ -12,6 +12,7 @@ import { AudioHelper } from "../helpers/audio_helper";
 
 const PADDLE_MARGIN = 10;
 const CPU_PADDLE_TOLERANCE = 5;
+const ROUND_DELAY = 1.2;
 
 function newPaddle(player: Player): Paddle {
   const assetLoader = ServiceLocator.resolve(AssetLoader);
@@ -61,6 +62,8 @@ export class GamePlayScene extends Scene {
   private _player1: Paddle = newPaddle(Player.One);
   private _player2: Paddle = newPaddle(Player.Two);
   private _ball: Ball = newBall();
+  private _delay: number = ROUND_DELAY;
+  private _showBall: boolean = true;
 
   constructor() {
     super();
@@ -89,7 +92,7 @@ export class GamePlayScene extends Scene {
     }
 
     this._player2.dir = Direction.None;
-    if (this._ball.dir.x > 0) {
+    if (this._ball.dir.x > 0 || this._delay > 0) {
       const delta = this._player2.shape.yMid - this._ball.shape.yMid;
 
       if (Math.abs(delta) > CPU_PADDLE_TOLERANCE) {
@@ -99,6 +102,13 @@ export class GamePlayScene extends Scene {
 
     this._player1.update(dt);
     this._player2.update(dt);
+
+    if (this._delay > 0) {
+      this._delay -= dt;
+      this._showBall = Math.floor(this._delay / 0.2) % 2 !== 0;
+      return;
+    }
+
     this._ball.update(dt);
 
     if (this._ball.pos.y < 0) {
@@ -114,13 +124,13 @@ export class GamePlayScene extends Scene {
     }
 
     if (this._ball.shape.x + this._ball.size.w < 0) {
-      this._ball = newBall();
       this._player2.score += 1;
+      this.nextRound();
     }
 
     if (this._ball.shape.x > CANVAS_W) {
-      this._ball = newBall();
       this._player1.score += 1;
+      this.nextRound();
     }
 
     for (let player of [this._player1, this._player2]) {
@@ -159,6 +169,14 @@ export class GamePlayScene extends Scene {
 
     this._player1.draw(renderer);
     this._player2.draw(renderer);
-    this._ball?.draw(renderer);
+
+    if (this._showBall) {
+      this._ball?.draw(renderer);
+    }
+  }
+
+  private nextRound() {
+    this._delay = ROUND_DELAY;
+    this._ball = newBall();
   }
 }

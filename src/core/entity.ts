@@ -81,6 +81,8 @@ export class Paddle extends Actor<Rect> {
 export class Ball extends Actor<Circle> {
   private readonly _shape: Circle;
 
+  alpha: number = 1.0;
+
   get shape(): Circle {
     return this._shape;
   }
@@ -94,5 +96,9 @@ export class Ball extends Actor<Circle> {
 
   increaseSpeed() {
     this.speed = Math.min(this.speed + 1, 20);
+  }
+
+  override draw(renderer: Renderer): void {
+    super.draw(renderer);
   }
 }
