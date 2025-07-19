@@ -137,6 +137,8 @@ export class GamePlayScene extends Scene {
   private _player1: Paddle = newPaddle(Player.One);
   private _player2: Paddle = newPaddle(Player.Two);
   private _ball: Ball = newBall();
+  private _delay: number = ROUND_DELAY;
+  private _showBall: boolean = true;
 
   constructor() {
     super();
@@ -238,7 +240,15 @@ export class GamePlayScene extends Scene {
 
     this._player1.draw(renderer);
     this._player2.draw(renderer);
-    this._ball?.draw(renderer);
+
+    if (this._showBall) {
+      this._ball?.draw(renderer);
+    }
+  }
+
+  private nextRound() {
+    this._delay = ROUND_DELAY;
+    this._ball = newBall();
   }
 
   start() {
