@@ -1,3 +1,5 @@
+type Drawable = HTMLImageElement | HTMLCanvasElement;
+
 export class TextureHelper {
   static generate(
     w: number,
@@ -23,7 +25,7 @@ export class TextureHelper {
    * @returns A stretched image.
    */
   static stretch(
-    image: HTMLImageElement,
+    image: Drawable,
     w: number,
     h: number,
     border: number = 10

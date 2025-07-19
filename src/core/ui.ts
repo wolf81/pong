@@ -8,16 +8,17 @@ import { Size } from "../math/size";
 import { Vector } from "../math/vector";
 
 type FontFamily = "Jumpman";
+type Drawable = HTMLCanvasElement | HTMLImageElement;
 
 export enum ControlState {
-  Default,
+  Normal,
   Hover,
   Active,
   Disabled,
 }
 
 export abstract class Control implements Layoutable {
-  private _state: ControlState = ControlState.Default;
+  private _state: ControlState = ControlState.Normal;
 
   protected _frame: Rect = Rect.zero;
 
@@ -50,6 +51,7 @@ export class Label extends Control {
   private _oy: number = 0;
   private _font: string;
   private _text: string;
+  private _textColor: string;
   private _fontSize: number;
 
   constructor(
@@ -57,12 +59,14 @@ export class Label extends Control {
     options?: Partial<{
       font: FontFamily;
       size: number;
+      textColor: string;
     }>
   ) {
     super();
 
     this._text = text;
 
+    this._textColor = options?.textColor ?? "#eeeeee";
     const fontName = options?.font ?? "Jumpman";
     this._fontSize = options?.size ?? 24;
     this._font = `${this._fontSize}px ${fontName}`;
@@ -77,14 +81,14 @@ export class Label extends Control {
     super.setFrame(rect);
 
     this._ox = rect.x + Math.floor(rect.w / 2);
-    this._oy = rect.y + Math.floor(rect.h / 2 + this._fontSize / 2);
+    this._oy = rect.y + Math.floor(rect.h / 2);
   }
 
   draw(renderer: Renderer): void {
     renderer.drawText(this._text, this._ox, this._oy, {
       font: this._font,
       align: "center",
-      color: "#72287cff",
+      color: this._textColor,
     });
   }
 }
@@ -105,12 +109,12 @@ export class Panel extends Control {
   }
 }
 
-export class Button extends Control {
-  private _background!: HTMLCanvasElement;
+export class Button extends Label {
+  private _background!: Drawable;
 
-  private _stateBackgrounds: Map<ControlState, HTMLCanvasElement> = new Map<
+  private _stateBackgrounds: Map<ControlState, Drawable> = new Map<
     ControlState,
-    HTMLCanvasElement
+    Drawable
   >();
 
   constructor(
@@ -120,7 +124,7 @@ export class Button extends Control {
       size: number;
     }>
   ) {
-    super();
+    super(title, options);
   }
 
   override setFrame(rect: {
@@ -130,22 +134,44 @@ export class Button extends Control {
     h: number;
   }): void {
     super.setFrame(rect);
+
+    const assetLoader = ServiceLocator.resolve(AssetLoader);
+
+    let normalImage: Drawable = assetLoader.getImage("button_square_gloss");
+    normalImage = TextureHelper.stretch(normalImage, rect.w, rect.h);
+    this._stateBackgrounds.set(ControlState.Normal, normalImage);
+
+    let hoverImage: Drawable = assetLoader.getImage(
+      "button_square_depth_gloss"
+    );
+    hoverImage = TextureHelper.stretch(hoverImage, rect.w, rect.h);
+    this._stateBackgrounds.set(ControlState.Hover, hoverImage);
+
+    this._background = this._stateBackgrounds.get(ControlState.Normal)!;
+
+    this.setState(ControlState.Normal);
+  }
+
+  override setState(state: ControlState): void {
+    super.setState(state);
+
+    this._background = this._stateBackgrounds.get(this.state)!;
   }
 
   update(dt: number): void {}
 
   draw(renderer: Renderer): void {
-    renderer.drawRect(
-      this._frame.x,
-      this._frame.y,
-      this._frame.w,
-      this._frame.h,
-      "#9966aa"
-    );
+    renderer.drawImage(this._background, this._frame.x, this._frame.y);
+
+    super.draw(renderer);
   }
 }
 
 export class UI {
+  static mouse: {
+    x: number;
+  };
+
   static panel(): Elem<Panel> {
     return Tidy.elem(new Panel(), {
       minSize: { w: 0, h: 0 },
@@ -158,6 +184,7 @@ export class UI {
     options?: Partial<{
       font: FontFamily;
       size: number;
+      textColor: string;
     }>
   ): Elem<Label> {
     return Tidy.elem(new Label(text, options), {
@@ -167,7 +194,7 @@ export class UI {
   }
 
   static button(title: string, options?: Partial<{}>): Elem<Button> {
-    return Tidy.elem(new Button(title), {
+    return Tidy.elem(new Button(title, options), {
       minSize: { w: 192, h: 64 },
       stretch: "horizontal",
     });

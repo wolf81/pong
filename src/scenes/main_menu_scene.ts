@@ -11,8 +11,8 @@ export class MainMenuScene extends Scene {
       [
         Tidy.vstack<Control>(
           [
-            UI.label("Pong!", { size: 40 }),
-            UI.button("Start"),
+            UI.label("Pong!", { size: 40, textColor: "#72287cff" }),
+            UI.button("Start", { size: 32 }),
             UI.button("Settings"),
             UI.button("Quit"),
           ],
