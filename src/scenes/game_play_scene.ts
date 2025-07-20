@@ -137,8 +137,6 @@ export class GamePlayScene extends Scene {
   private _player1: Paddle = newPaddle(Player.One);
   private _player2: Paddle = newPaddle(Player.Two);
   private _ball: Ball = newBall();
-  private _delay: number = ROUND_DELAY;
-  private _showBall: boolean = true;
 
   constructor() {
     super();
@@ -155,6 +153,12 @@ export class GamePlayScene extends Scene {
         }
       }
     });
+
+    this.startRound(2.0);
+  }
+
+  override deinit(): void {
+    Timer.removeAllTimers();
   }
 
   override deinit(): void {
@@ -240,9 +244,40 @@ export class GamePlayScene extends Scene {
 
     this._player1.draw(renderer);
     this._player2.draw(renderer);
+    this._ball?.draw(renderer);
+  }
 
-    if (this._showBall) {
-      this._ball?.draw(renderer);
+  private startRound(delay: number = 1.0) {
+    Timer.after(delay, () => {
+      this._state = GamePlayState.StartRound;
+      this._ball = newBall();
+      Timer.every(
+        0.1,
+        ROUND_DELAY,
+        () => {
+          this._ball.isVisible = this._ball.isVisible === false;
+        },
+        () => {
+          this._ball.isVisible = true;
+          this._state = GamePlayState.PlayRound;
+        }
+      );
+    });
+  }
+
+  private endRound(winner: Paddle) {
+    const hasWinner =
+      this._player1.score === GAME_POINTS ||
+      this._player2.score === GAME_POINTS;
+
+    if (hasWinner) {
+      endGame(
+        this._player1.score > this._player2.score ? Player.One : Player.Two
+      );
+    } else {
+      this._state = GamePlayState.EndRound;
+      winner.score += 1;
+      this.startRound();
     }
   }
 
