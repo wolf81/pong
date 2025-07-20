@@ -1,8 +1,7 @@
 /**
- * Use the simulation timer to ensure the game state is updated at constant
- * intervals, regardless of performance drops.
+ * Use the runloop to run the game at fixed intervals.
  */
-export class SimulationTimer {
+export class Runloop {
   private static _alpha: number = 0;
   private static _accumulator: number = 0;
   private static _fps: number = 0;
