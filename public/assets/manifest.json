@@ -4,11 +4,11 @@
     "fnt/Jumpman/License.txt",
     "gfx/kenney-prototype-textures/License.txt",
     "gfx/kenney-prototype-textures/texture_08.png",
+    "gfx/kenney-puzzle-pack/License.txt",
     "gfx/kenney-puzzle-pack/ballBlue.png",
     "gfx/kenney-puzzle-pack/ballGrey.png",
     "gfx/kenney-puzzle-pack/buttonDefault.png",
     "gfx/kenney-puzzle-pack/buttonSelected.png",
-    "gfx/kenney-puzzle-pack/License.txt",
     "gfx/kenney-puzzle-pack/paddleBlu.png",
     "gfx/kenney-puzzle-pack/paddleRed.png",
     "gfx/kenney-puzzle-pack/particleCartoonStar.png",
@@ -23,11 +23,10 @@
     "gfx/kenney-ui-pack/button_square_depth_gloss.png",
     "gfx/kenney-ui-pack/button_square_flat.png",
     "gfx/kenney-ui-pack/button_square_gloss.png",
-    "gfx/kenney-voiceover-pack/go.ogg",
-    "gfx/kenney-voiceover-pack/ready.ogg",
     "gfx/kenney-voiceover-pack/you_lose.ogg",
     "gfx/kenney-voiceover-pack/you_win.ogg",
     "manifest.json",
+    "sfx/License.txt",
     "sfx/impactWood_heavy_000.ogg",
     "sfx/impactWood_heavy_001.ogg",
     "sfx/impactWood_heavy_002.ogg",
@@ -42,7 +41,6 @@
     "sfx/impactWood_medium_001.ogg",
     "sfx/impactWood_medium_002.ogg",
     "sfx/impactWood_medium_003.ogg",
-    "sfx/impactWood_medium_004.ogg",
-    "sfx/License.txt"
+    "sfx/impactWood_medium_004.ogg"
   ]
 }

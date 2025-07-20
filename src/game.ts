@@ -7,6 +7,7 @@ import { GamePlayScene } from "./scenes/game_play_scene";
 import { Settings } from "./settings";
 import { MainMenuScene } from "./scenes/main_menu_scene";
 import { UI } from "./core/ui";
+import { Timer } from "./lib/timer";
 
 /**
  * The Game class contains the core game logic.
@@ -45,6 +46,7 @@ export class Game {
 
     this._inputListener.update();
 
+    Timer.update(dt);
     UI.update();
   }
 

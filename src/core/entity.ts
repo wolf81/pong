@@ -21,6 +21,7 @@ export abstract class Entity {
 
   pos: Vector = Vector.zero;
   size: Size;
+  isVisible: boolean = true;
 
   constructor(texture: HTMLImageElement, pos?: Vector) {
     this.sprite = texture;
@@ -35,6 +36,8 @@ export abstract class Entity {
   }
 
   draw(renderer: Renderer) {
+    if (!this.isVisible) return;
+
     const pos = this.prevPos.lerp(this.pos, SimulationTimer.alpha);
     renderer.drawImage(this.sprite, Math.floor(pos.x), Math.floor(pos.y));
   }

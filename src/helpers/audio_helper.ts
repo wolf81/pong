@@ -4,6 +4,13 @@ import { ServiceLocator } from "../lib/service_locator";
 type Impact = "light" | "medium" | "heavy";
 
 export class AudioHelper {
+  static playSound(name: string) {
+    const assetLoader = ServiceLocator.resolve(AssetLoader);
+    const audio = assetLoader.getAudio(name);
+    audio.currentTime = 0; // Rewind if playing.
+    audio.play();
+  }
+
   static playRandomImpactSound(speed: number): void {
     const assetLoader = ServiceLocator.resolve(AssetLoader);
 
@@ -43,9 +50,6 @@ export class AudioHelper {
 
     // TODO: Use own seedable Random library.
     const idx = Math.floor(Math.random() * sounds.length);
-    const sound = sounds[idx];
-    const audio = assetLoader.getAudio(sound);
-    audio.currentTime = 0; // Rewind if playing.
-    audio.play();
+    this.playSound(sounds[idx]);
   }
 }

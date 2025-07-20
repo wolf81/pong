@@ -116,12 +116,28 @@ export class Circle extends Shape {
     return this._radius;
   }
 
+  get xMin(): number {
+    return this._pos.x;
+  }
+
+  get xMax(): number {
+    return this._pos.x + this._radius * 2;
+  }
+
   get xMid(): number {
     return this._pos.x + this._radius;
   }
 
+  get yMin(): number {
+    return this._pos.y;
+  }
+
   get yMid(): number {
     return this._pos.y + this._radius;
+  }
+
+  get yMax(): number {
+    return this._pos.y + this._radius * 2;
   }
 
   constructor(pos: Vector, radius: number) {
