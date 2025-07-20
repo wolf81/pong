@@ -1,6 +1,6 @@
 import { Game } from "./game";
 import { Renderer } from "./lib/renderer";
-import { SimulationTimer } from "./lib/simulation_timer";
+import { Runloop } from "./lib/runloop";
 import { Settings } from "./settings";
 import { CANVAS_H, CANVAS_W } from "./constants";
 
@@ -24,7 +24,7 @@ function gameLoop(time: number) {
 
   // Ensure the update method runs at a fixed time-step, regardless of fps
   // drops.
-  SimulationTimer.update(time, (dt) => game.update(dt));
+  Runloop.update(time, (dt) => game.update(dt));
 
   // Render based on best-effort (hopefully same as update loop, but not
   // required).
@@ -36,7 +36,7 @@ function gameLoop(time: number) {
     ctx.font = "16px monospace";
     let y = 20;
     if (Settings.showFps) {
-      ctx.fillText(`FPS: ${SimulationTimer.fps}`, 10, y);
+      ctx.fillText(`FPS: ${Runloop.fps}`, 10, y);
       y += 20;
     }
 

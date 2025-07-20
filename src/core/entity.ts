@@ -1,5 +1,5 @@
 import { Renderer } from "../lib/renderer";
-import { SimulationTimer } from "../lib/simulation_timer";
+import { Runloop } from "../lib/runloop";
 import { Size } from "../math/size";
 import { Vector } from "../math/vector";
 import { Circle, Rect, Shape } from "../lib/shape";
@@ -38,7 +38,7 @@ export abstract class Entity {
   draw(renderer: Renderer) {
     if (!this.isVisible) return;
 
-    const pos = this.prevPos.lerp(this.pos, SimulationTimer.alpha);
+    const pos = this.prevPos.lerp(this.pos, Runloop.alpha);
     renderer.drawImage(this.sprite, Math.floor(pos.x), Math.floor(pos.y));
   }
 }
