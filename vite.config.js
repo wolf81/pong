@@ -41,7 +41,7 @@ function assetManifestPlugin() {
 export default defineConfig({
   root: ".",
   publicDir: "public",
-  base: "/pong/", // For publishing to Github Pages.
+  base: "/", // For publishing to Github Pages with custom subdomain.
   build: {
     target: "es2022",
     outDir: "dist",
