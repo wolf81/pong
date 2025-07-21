@@ -14,6 +14,7 @@ import { LoadingScene } from "./scenes/loading_scene";
 export class Game {
   private _sceneManager: SceneManager;
   private _inputListener: InputListener;
+  private _assetLoader: AssetLoader;
 
   constructor(canvas: HTMLCanvasElement) {
     this._inputListener = new InputListener(canvas);
@@ -22,14 +23,13 @@ export class Game {
     this._sceneManager = new SceneManager(canvas.width, canvas.height);
     ServiceLocator.register(SceneManager, this._sceneManager);
 
+    this._assetLoader = new AssetLoader();
+    ServiceLocator.register(AssetLoader, this._assetLoader);
+
     UI.init(canvas);
   }
 
   async init(): Promise<void> {
-    const assetLoader = new AssetLoader();
-    await assetLoader.preload();
-    ServiceLocator.register(AssetLoader, assetLoader);
-
     this._sceneManager.switch(new LoadingScene());
   }
 

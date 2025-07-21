@@ -162,7 +162,10 @@ export class GamePlayScene extends Scene {
     }
 
     // Update ball position only during gameplay.
-    if (this._state === GamePlayState.PlayRound) {
+    if (
+      this._state === GamePlayState.PlayRound ||
+      this._state === GamePlayState.EndRound
+    ) {
       this._ball.update(dt);
     }
 
