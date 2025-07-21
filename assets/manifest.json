@@ -42,7 +42,6 @@
     "kenney-voiceover-pack/go.ogg",
     "kenney-voiceover-pack/ready.ogg",
     "kenney-voiceover-pack/you_lose.ogg",
-    "kenney-voiceover-pack/you_win.ogg",
-    "manifest.json"
+    "kenney-voiceover-pack/you_win.ogg"
   ]
 }
