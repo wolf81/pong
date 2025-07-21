@@ -3,14 +3,10 @@ import { AssetLoader } from "./lib/asset_loader";
 import { InputListener } from "./lib/input_listener";
 import { SceneManager } from "./lib/scene_manager";
 import { ServiceLocator } from "./lib/service_locator";
-import { GamePlayScene } from "./scenes/game_play_scene";
 import { Settings } from "./settings";
-import { MainMenuScene } from "./scenes/main_menu_scene";
 import { UI } from "./core/ui";
 import { Timer } from "./lib/timer";
-import { GameOverScene } from "./scenes/game_over_scene";
-import { Player } from "./core/types";
-import { InstructionsScene } from "./scenes/instructions_scene";
+import { LoadingScene } from "./scenes/loading_scene";
 
 /**
  * The Game class contains the core game logic.
@@ -34,8 +30,7 @@ export class Game {
     await assetLoader.preload();
     ServiceLocator.register(AssetLoader, assetLoader);
 
-    this._sceneManager.switch(new GamePlayScene());
-    this._sceneManager.push(new MainMenuScene());
+    this._sceneManager.switch(new LoadingScene());
   }
 
   update(dt: number) {
