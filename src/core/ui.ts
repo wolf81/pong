@@ -1,16 +1,20 @@
 import { TextureHelper } from "../helpers/texture_helper";
-import { AssetLoader } from "../lib/asset_loader";
-import { Renderer } from "../lib/renderer";
-import { ServiceLocator } from "../lib/service_locator";
-import { Rect } from "../lib/shape";
-import { Elem, Tidy, Layoutable } from "../lib/tidy";
-import { Size } from "../lib/size";
-import { Vector } from "../lib/vector";
+import {
+  vector,
+  ServiceLocator,
+  AssetLoader,
+  Layoutable,
+  Rect,
+  Shape,
+  Renderer,
+  Elem,
+  Tidy,
+} from "../lib/ignite";
 
 type FontFamily = "Jumpman";
 type Drawable = HTMLCanvasElement | HTMLImageElement;
 type Mouse = {
-  pos: Vector;
+  pos: vector;
   buttonState: "none" | "down" | "up";
 };
 
@@ -47,7 +51,7 @@ export enum ControlState {
 export abstract class Control implements Layoutable {
   private _state: ControlState = ControlState.Normal;
 
-  protected _frame: Rect = Rect.zero;
+  protected _frame: Rect = Shape.rect(0, 0, 0, 0);
 
   get state(): ControlState {
     return this._state;
@@ -62,10 +66,7 @@ export abstract class Control implements Layoutable {
   }
 
   setFrame(rect: { x: number; y: number; w: number; h: number }): void {
-    this._frame = new Rect(
-      new Vector(rect.x, rect.y),
-      new Size(rect.w, rect.h)
-    );
+    this._frame = Shape.rect(rect.x, rect.y, rect.w, rect.h);
   }
 
   update(dt: number): void {}
@@ -197,13 +198,15 @@ export class Button extends Label {
   }
 
   update(dt: number): void {
-    const isHit = this._frame.containsPoint(UI.mouse.pos);
+    const isHit = Shape.containsPoint(this._frame, UI.mouse.pos);
     const isPress = isHit && UI.mouse.buttonState === "down";
     const isRelease =
       this.state === ControlState.Active && UI.mouse.buttonState === "up";
 
     if (!isHit) {
       this.setState(ControlState.Normal);
+    } else {
+      this.setState(ControlState.Hover);
     }
 
     if (isPress && !isRelease) {
@@ -252,7 +255,7 @@ export class UI {
   }
 
   private static _mouse: Mouse = {
-    pos: Vector.zero,
+    pos: { x: 0, y: 0 },
     buttonState: "none",
   };
 

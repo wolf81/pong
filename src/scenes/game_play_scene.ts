@@ -1,16 +1,20 @@
 import { CANVAS_H, CANVAS_W } from "../constants";
 import { Paddle, Ball } from "../core/entity";
 import { Direction, Player } from "../core/types";
-import { Renderer } from "../lib/renderer";
 import { TextureHelper } from "../helpers/texture_helper";
-import { AssetLoader } from "../lib/asset_loader";
-import { InputListener } from "../lib/input_listener";
-import { Scene, SceneManager } from "../lib/scene_manager";
-import { ServiceLocator } from "../lib/service_locator";
-import { Vector } from "../lib/vector";
 import { AudioHelper } from "../helpers/audio_helper";
-import { Timer } from "../lib/timer";
 import { GameOverScene } from "./game_over_scene";
+import {
+  ServiceLocator,
+  AssetLoader,
+  Vector,
+  SceneManager,
+  InputListener,
+  Shape,
+  Scene,
+  Timer,
+  Renderer,
+} from "../lib/ignite";
 
 const PADDLE_MARGIN = 10;
 const CPU_PADDLE_TOLERANCE = 5;
@@ -35,12 +39,12 @@ function newPaddle(player: Player): Paddle {
   switch (player) {
     case Player.One: {
       const sprite = assetLoader.getImage("paddleBlu");
-      const pos = new Vector(PADDLE_MARGIN, (CANVAS_H - sprite.height) / 2);
+      const pos = Vector.new(PADDLE_MARGIN, (CANVAS_H - sprite.height) / 2);
       return new Paddle(sprite, pos, Player.One);
     }
     case Player.Two: {
       const sprite = assetLoader.getImage("paddleRed");
-      const pos = new Vector(
+      const pos = Vector.new(
         CANVAS_W - sprite.width - PADDLE_MARGIN,
         (CANVAS_H - sprite.height) / 2
       );
@@ -57,7 +61,7 @@ function newBall(): Ball {
   const assetLoader = ServiceLocator.resolve(AssetLoader);
 
   const sprite = assetLoader.getImage("ballGrey");
-  const pos = new Vector(
+  const pos = Vector.new(
     (CANVAS_W - sprite.width) / 2,
     (CANVAS_H - sprite.height) / 2
   );
@@ -94,17 +98,21 @@ function handleInput(paddle: Paddle, ball: Ball, state: GamePlayState) {
       // When not playing a round, move CPU player to the middle.
       if (state === GamePlayState.EndRound) {
         paddle.dir = Direction.None;
-        if (paddle.shape.yMid < CANVAS_H / 2 - CPU_PADDLE_TOLERANCE) {
+
+        let { y } = Shape.mid(paddle.shape);
+        if (y < CANVAS_H / 2 - CPU_PADDLE_TOLERANCE) {
           paddle.dir = Direction.Down;
         }
-        if (paddle.shape.yMid > CANVAS_H / 2 + CPU_PADDLE_TOLERANCE) {
+        if (y > CANVAS_H / 2 + CPU_PADDLE_TOLERANCE) {
           paddle.dir = Direction.Up;
         }
       }
 
       // When playing and ball moves towards player, follow ball.
       if (state === GamePlayState.PlayRound && ball.dir.x > 0) {
-        const delta = paddle.shape.yMid - ball.shape.yMid;
+        let midPaddle = Shape.mid(paddle.shape);
+        let midBall = Shape.mid(ball.shape);
+        const delta = midPaddle.y - midBall.y;
 
         if (Math.abs(delta) > CPU_PADDLE_TOLERANCE) {
           paddle.dir = delta > 0 ? Direction.Up : Direction.Down;
@@ -169,23 +177,26 @@ export class GamePlayScene extends Scene {
       this._ball.update(dt);
     }
 
-    if (this._ball.shape.yMin < 0) {
+    const midBall = Shape.mid(this._ball.shape);
+
+    if (Shape.min(this._ball.shape).y < 0) {
       this._ball.pos.y = 0;
       this._ball.dir.y = -this._ball.dir.y;
       AudioHelper.playRandomImpactSound(this._ball.speed);
     }
 
-    if (this._ball.shape.yMax > CANVAS_H) {
+    if (Shape.max(this._ball.shape).y > CANVAS_H) {
       this._ball.pos.y = CANVAS_H - this._ball.size.h;
       this._ball.dir.y = -this._ball.dir.y;
       AudioHelper.playRandomImpactSound(this._ball.speed);
     }
 
     for (let player of players) {
+      const midPlayer = Shape.mid(player.shape);
+
       if (this._ball.collidesWith(player)) {
         // Adjust vertical deflection.
-        const hitY =
-          (this._ball.shape.yMid - player.shape.yMid) / (player.size.h / 2);
+        const hitY = (midBall.y - midPlayer.y) / (player.size.h / 2);
         const maxBounce = Math.PI / 3; // Limit angle to 60°.
 
         let angle = 0;
@@ -202,11 +213,11 @@ export class GamePlayScene extends Scene {
     }
 
     if (this._state === GamePlayState.PlayRound) {
-      if (this._ball.shape.xMax < 0) {
+      if (Shape.max(this._ball.shape).x < 0) {
         this.endRound(this._player2);
       }
 
-      if (this._ball.shape.xMin > CANVAS_W) {
+      if (Shape.min(this._ball.shape).x > CANVAS_W) {
         this.endRound(this._player1);
       }
     }

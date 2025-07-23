@@ -1,8 +1,12 @@
-import { Renderer } from "../lib/renderer";
-import { Runloop } from "../lib/runloop";
-import { Size } from "../lib/size";
-import { Vector } from "../lib/vector";
-import { Circle, Rect, Shape } from "../lib/shape";
+import {
+  vector,
+  Vector,
+  Renderer,
+  Runloop,
+  Shape,
+  Rect,
+  Circle,
+} from "../lib/ignite";
 import { Player } from "./types";
 
 /**
@@ -11,40 +15,40 @@ import { Player } from "./types";
 const BASE_SPEED = 60;
 
 export abstract class Entity {
-  protected _prevPos: Vector;
+  protected _prevPos: vector;
 
-  get prevPos(): Vector {
+  get prevPos(): vector {
     return this._prevPos;
   }
 
   readonly sprite: HTMLImageElement;
 
-  pos: Vector = Vector.zero;
-  size: Size;
+  pos: vector = { x: 0, y: 0 };
+  size: { w: number; h: number };
   isVisible: boolean = true;
 
-  constructor(texture: HTMLImageElement, pos?: Vector) {
+  constructor(texture: HTMLImageElement, pos?: vector) {
     this.sprite = texture;
 
-    this.pos = pos ?? Vector.zero;
-    this._prevPos = this.pos.clone();
-    this.size = new Size(texture.width, texture.height);
+    this.pos = pos ?? { x: 0, y: 0 };
+    this._prevPos = Vector.clone(this.pos);
+    this.size = { w: texture.width, h: texture.height };
   }
 
   update(_: number): void {
-    this._prevPos = this.pos.clone();
+    this._prevPos = Vector.clone(this.pos);
   }
 
   draw(renderer: Renderer) {
     if (!this.isVisible) return;
 
-    const pos = this.prevPos.lerp(this.pos, Runloop.alpha);
+    const pos = Vector.lerp(this._prevPos, this.pos, Runloop.alpha);
     renderer.drawImage(this.sprite, Math.floor(pos.x), Math.floor(pos.y));
   }
 }
 
 export abstract class Actor<T extends Shape> extends Entity {
-  dir: Vector = Vector.zero;
+  dir: vector = Vector.zero;
   speed: number = 8;
 
   abstract get shape(): T;
@@ -52,13 +56,14 @@ export abstract class Actor<T extends Shape> extends Entity {
   update(dt: number): void {
     super.update(dt);
 
-    const dxy = this.dir.mul(this.speed * BASE_SPEED * dt);
-    this.pos = this.pos.add(dxy);
-    this.shape.pos = this.pos;
+    const dxy = Vector.mul(this.dir, this.speed * BASE_SPEED * dt);
+    this.pos = Vector.add(this.pos, dxy);
+    this.shape.x = this.pos.x;
+    this.shape.y = this.pos.y;
   }
 
   collidesWith(actor: Actor<any>): boolean {
-    return this.shape.intersects(actor.shape);
+    return Shape.intersects(this.shape, actor.shape);
   }
 }
 
@@ -73,11 +78,11 @@ export class Paddle extends Actor<Rect> {
 
   score: number = 0;
 
-  constructor(texture: HTMLImageElement, pos: Vector, player: Player) {
+  constructor(texture: HTMLImageElement, pos: vector, player: Player) {
     super(texture, pos);
 
     this.player = player;
-    this._shape = new Rect(this.pos, this.size);
+    this._shape = Shape.rect(this.pos.x, pos.y, this.size.w, this.size.h);
   }
 }
 
@@ -90,11 +95,11 @@ export class Ball extends Actor<Circle> {
     return this._shape;
   }
 
-  constructor(texture: HTMLImageElement, pos: Vector) {
+  constructor(texture: HTMLImageElement, pos: vector) {
     super(texture, pos);
 
     const radius = this.sprite.width / 2;
-    this._shape = new Circle(this.pos, radius);
+    this._shape = Shape.circle(this.pos.x, pos.y, radius);
   }
 
   increaseSpeed() {

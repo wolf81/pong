@@ -1,8 +1,7 @@
 import { Game } from "./game";
-import { Renderer } from "./lib/renderer";
-import { Runloop } from "./lib/runloop";
 import { Settings } from "./settings";
 import { CANVAS_H, CANVAS_W } from "./constants";
+import { Renderer, Runloop } from "./lib/ignite";
 
 const canvas = document.getElementById("game") as HTMLCanvasElement;
 canvas.width = CANVAS_W;

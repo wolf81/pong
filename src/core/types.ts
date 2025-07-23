@@ -1,4 +1,4 @@
-import { Vector } from "../lib/vector";
+import { Vector } from "../lib/ignite";
 
 export enum Player {
   One,
@@ -7,8 +7,8 @@ export enum Player {
 
 export const Direction = {
   None: Vector.zero,
-  Up: new Vector(0, -1),
-  Down: new Vector(0, 1),
-  Left: new Vector(-1, 0),
-  Right: new Vector(1, 0),
+  Up: { x: 0, y: -1 },
+  Down: { x: 0, y: 1 },
+  Left: { x: -1, y: 0 },
+  Right: { x: 1, y: 0 },
 } as const;

@@ -1,3 +1,5 @@
+import { XmlNode, XmlParser } from "./xml_parser";
+
 function getFileName(path: string): string {
   const parts = path.split("/").pop()?.split("\\").pop()?.split(".") || [];
   if (parts.length <= 1) return parts[0] || "";
@@ -20,6 +22,7 @@ const FONT_EXTENSIONS = [".ttf"];
 export class AssetLoader {
   private _imageRegistry = new Map<string, HTMLImageElement>();
   private _audioRegistry = new Map<string, HTMLAudioElement>();
+  private _xmlRegistry = new Map<string, XmlNode>();
 
   /**
    * Get an image asset by name.
@@ -37,6 +40,15 @@ export class AssetLoader {
    */
   getAudio(name: string): HTMLAudioElement {
     return this._audioRegistry.get(name)!;
+  }
+
+  /**
+   * Get a XML document by name.
+   * @param name The filename without extension.
+   * @returns 
+   */
+  getXml(name: string): XmlNode {
+    return this._xmlRegistry.get(name)!;
   }
 
   /**
@@ -89,6 +101,14 @@ export class AssetLoader {
           const font = new FontFace(fontName, `url(${url})`);
           await font.load();
           document.fonts.add(font);
+          continue;
+        }
+
+        if (url.endsWith(".xml")) {
+          const data = await fetch(url);
+          const xmlString = await data.text()
+          const xml = XmlParser.parse(xmlString);
+          this._xmlRegistry.set(getFileName(filePath), xml);
           continue;
         }
       }

@@ -1,5 +1,4 @@
-import { AssetLoader } from "../lib/asset_loader";
-import { ServiceLocator } from "../lib/service_locator";
+import { ServiceLocator, AssetLoader } from "../lib/ignite";
 
 type Impact = "light" | "medium" | "heavy";
 

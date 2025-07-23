@@ -1,10 +1,14 @@
 import { CANVAS_H, CANVAS_W } from "../constants";
 import { Control, UI } from "../core/ui";
 import { AudioHelper } from "../helpers/audio_helper";
-import { Renderer } from "../lib/renderer";
-import { Scene, SceneManager } from "../lib/scene_manager";
-import { ServiceLocator } from "../lib/service_locator";
-import { Layout, Tidy } from "../lib/tidy";
+import {
+  ServiceLocator,
+  SceneManager,
+  Scene,
+  Layout,
+  Tidy,
+  Renderer,
+} from "../lib/ignite";
 import { GamePlayScene } from "./game_play_scene";
 import { InstructionsScene } from "./instructions_scene";
 
@@ -42,7 +46,7 @@ export class MainMenuScene extends Scene {
         ),
       ],
       {
-        margin: Tidy.margin(16),
+        margin: Tidy.margin(16, 16, 16, 16),
       }
     ),
   ]);

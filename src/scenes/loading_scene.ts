@@ -1,8 +1,11 @@
 import { CANVAS_H, CANVAS_W } from "../constants";
-import { AssetLoader } from "../lib/asset_loader";
-import { Renderer } from "../lib/renderer";
-import { Scene, SceneManager } from "../lib/scene_manager";
-import { ServiceLocator } from "../lib/service_locator";
+import {
+  ServiceLocator,
+  AssetLoader,
+  SceneManager,
+  Scene,
+  Renderer,
+} from "../lib/ignite";
 import { GamePlayScene } from "./game_play_scene";
 import { MainMenuScene } from "./main_menu_scene";
 

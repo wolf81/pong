@@ -2,10 +2,14 @@ import { CANVAS_H, CANVAS_W } from "../constants";
 import { Player } from "../core/types";
 import { Control, UI } from "../core/ui";
 import { AudioHelper } from "../helpers/audio_helper";
-import { Renderer } from "../lib/renderer";
-import { Scene, SceneManager } from "../lib/scene_manager";
-import { ServiceLocator } from "../lib/service_locator";
-import { Layout, Tidy } from "../lib/tidy";
+import {
+  ServiceLocator,
+  SceneManager,
+  Layout,
+  Tidy,
+  Scene,
+  Renderer,
+} from "../lib/ignite";
 import { MainMenuScene } from "./main_menu_scene";
 
 function showMainMenu() {
@@ -33,7 +37,7 @@ function makeLayout(winner: Player): Layout<Control> {
         ),
       ],
       {
-        margin: Tidy.margin(16),
+        margin: Tidy.margin(16, 16, 16, 16),
       }
     ),
   ]);

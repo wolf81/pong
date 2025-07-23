@@ -34,6 +34,7 @@ export class Timer {
 
     while (true) {
       const next = this._heap.peek();
+
       if (!next || next.scheduledAt > this._time) break;
 
       this._heap.pop()?.action();
@@ -83,7 +84,7 @@ export class Timer {
     const startTime = this._time + delay;
     const endTime = this._time + duration;
 
-    for (let time = startTime; time < endTime; time += delay) {
+    for (let time = startTime; time <= endTime; time += delay) {
       this._heap.push({ scheduledAt: time, action: action });
     }
 

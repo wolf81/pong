@@ -1,12 +1,14 @@
-import { Renderer } from "./lib/renderer";
-import { AssetLoader } from "./lib/asset_loader";
-import { InputListener } from "./lib/input_listener";
-import { SceneManager } from "./lib/scene_manager";
-import { ServiceLocator } from "./lib/service_locator";
 import { Settings } from "./settings";
 import { UI } from "./core/ui";
-import { Timer } from "./lib/timer";
 import { LoadingScene } from "./scenes/loading_scene";
+import {
+  SceneManager,
+  InputListener,
+  AssetLoader,
+  ServiceLocator,
+  Timer,
+  Renderer,
+} from "./lib/ignite";
 
 /**
  * The Game class contains the core game logic.

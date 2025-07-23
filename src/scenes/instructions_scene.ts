@@ -1,10 +1,14 @@
 import { CANVAS_H, CANVAS_W } from "../constants";
 import { Control, UI } from "../core/ui";
 import { AudioHelper } from "../helpers/audio_helper";
-import { Renderer } from "../lib/renderer";
-import { Scene, SceneManager } from "../lib/scene_manager";
-import { ServiceLocator } from "../lib/service_locator";
-import { Layout, Tidy } from "../lib/tidy";
+import {
+  Layout,
+  Renderer,
+  Scene,
+  SceneManager,
+  ServiceLocator,
+  Tidy,
+} from "../lib/ignite";
 import { MainMenuScene } from "./main_menu_scene";
 
 function showMainMenu() {
@@ -46,7 +50,7 @@ export class InstructionsScene extends Scene {
         ),
       ],
       {
-        margin: Tidy.margin(16),
+        margin: Tidy.margin(16, 16, 16, 16),
       }
     ),
   ]);

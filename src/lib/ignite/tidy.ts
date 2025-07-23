@@ -1,8 +1,9 @@
+import { Rect, Shape } from "./shape";
+
 // Types for internal use by Tidy.
-type Size = { w: number; h: number };
-type Rect = { x: number; y: number; w: number; h: number };
 type Margin = { l: number; t: number; r: number; b: number };
 type Stretch = "none" | "horizontal" | "vertical" | "all";
+type Size = { w: number; h: number };
 
 /**
  * Controls that need their frame set by Tidy should implement the Layoutable
@@ -45,7 +46,7 @@ export abstract class Layout<T extends Layoutable = Layoutable> {
    */
   reshape(x: number, y: number, w: number, h: number): void {
     this.expand();
-    this.layout({ x: x, y: y, w: w, h: h });
+    this.layout(Shape.rect(x, y, w, h));
   }
 
   /**
@@ -163,10 +164,10 @@ class Border<T extends Layoutable> extends Layout<T> {
     const w = rect.w - l - r;
     const h = rect.h - t - b;
 
-    this.frame = { x, y, w, h };
+    this.frame = Shape.rect(x, y, w, h);
 
     for (const ch of this.children) {
-      ch.frame = { x, y, w, h };
+      ch.frame = Shape.rect(x, y, w, h);
     }
   }
 }
@@ -203,7 +204,7 @@ class VStack<T extends Layoutable> extends Layout<T> {
         ch.stretch === "horizontal" || ch.stretch === "all"
           ? rect.w
           : ch.expSize?.w ?? 0;
-      ch.frame = { x: rect.x, y, w, h };
+      ch.frame = Shape.rect(rect.x, y, w, h);
       y += h + this.spacing;
     }
   }
@@ -241,14 +242,14 @@ class HStack<T extends Layoutable> extends Layout<T> {
         ch.stretch === "vertical" || ch.stretch === "all"
           ? rect.h
           : ch.expSize?.h ?? 0;
-      ch.frame = { x, y: rect.y, w, h };
+      ch.frame = Shape.rect(x, rect.y, w, h);
       x += w + this.spacing;
     }
   }
 }
 
-export class Tidy {
-  static border<T extends Layoutable>(
+export const Tidy = {
+  border<T extends Layoutable>(
     children: Layout<T>[] | Layout<T>,
     options: Partial<{ margin: Margin; stretch: Stretch; minSize: Size }> = {}
   ): Border<T> {
@@ -258,9 +259,9 @@ export class Tidy {
       options.stretch ?? "all",
       options.margin ?? { t: 0, b: 0, l: 0, r: 0 }
     );
-  }
+  },
 
-  static hstack<T extends Layoutable>(
+  hstack<T extends Layoutable>(
     children: Layout<T> | Layout<T>[],
     options: Partial<{ spacing: number; stretch: Stretch }> = {}
   ): HStack<T> {
@@ -270,9 +271,9 @@ export class Tidy {
       options.stretch ?? "horizontal",
       options.spacing ?? 0
     );
-  }
+  },
 
-  static vstack<T extends Layoutable>(
+  vstack<T extends Layoutable>(
     children: Layout<T> | Layout<T>[],
     options: Partial<{ spacing: number; stretch: Stretch }> = {}
   ): VStack<T> {
@@ -282,9 +283,9 @@ export class Tidy {
       options.stretch ?? "vertical",
       options.spacing ?? 0
     );
-  }
+  },
 
-  static elem<T extends Layoutable>(
+  elem<T extends Layoutable>(
     widget: T,
     options: Partial<{ minSize: Size; stretch: Stretch }> = {}
   ): Elem<T> {
@@ -293,19 +294,14 @@ export class Tidy {
       options.minSize ?? { w: 0, h: 0 },
       options.stretch ?? "none"
     );
-  }
+  },
 
-  static size(w: number, h: number): Size {
+  size(w: number, h: number): Size {
     return { w: w, h: h };
-  }
+  },
 
-  static margin(h: number, v: number): Margin;
-  static margin(all: number): Margin;
-  static margin(l: number, t: number, r: number, b: number): Margin;
-  static margin(l: number, t?: number, r?: number, b?: number): Margin {
-    t = t ?? l;
-    r = r ?? l;
-    b = b ?? t;
+  margin(l: number, t: number, r: number, b: number): Margin {
     return { l: l, t: t, r: r, b: b };
   }
 }
+

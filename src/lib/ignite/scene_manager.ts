@@ -1,4 +1,4 @@
-import { Renderer } from "../lib/renderer";
+import { Renderer } from "./renderer";
 
 export abstract class Scene {
   /**
