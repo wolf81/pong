@@ -21,3 +21,7 @@ export * from './assert'
 export * from './input_listener'
 
 export * from './service_locator'
+
+export * from './spritesheet'
+
+export * from './camera'

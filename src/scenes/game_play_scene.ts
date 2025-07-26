@@ -14,6 +14,7 @@ import {
   Scene,
   Timer,
   Renderer,
+  InputAction,
 } from "../lib/ignite";
 
 const PADDLE_MARGIN = 10;
@@ -87,10 +88,10 @@ function handleInput(paddle: Paddle, ball: Ball, state: GamePlayState) {
   switch (paddle.player) {
     // Handle keyboard input
     case Player.One:
-      if (inputListener.isKeyDown("w")) {
+      if (inputListener.isInputDown(InputAction.DPadU)) {
         paddle.dir = Direction.Up;
       }
-      if (inputListener.isKeyDown("s")) {
+      if (inputListener.isInputDown(InputAction.DPadD)) {
         paddle.dir = Direction.Down;
       }
       break;

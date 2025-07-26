@@ -5,6 +5,10 @@ export interface XmlNode {
   text?: string;
 }
 
+function trimNewlines(str: string): string {
+  return str.replace(/^(?:\r\n|\r|\n)+|(?:\r\n|\r|\n)+$/g, "");
+}
+
 function convertElement(el: Element): XmlNode {
   const node: XmlNode = {
     name: el.tagName,
@@ -20,9 +24,11 @@ function convertElement(el: Element): XmlNode {
     if (child.nodeType === Node.ELEMENT_NODE) {
       node.children.push(convertElement(child as Element));
     } else if (child.nodeType === Node.TEXT_NODE) {
-      const text = child.textContent?.trim();
-      if (text) {
-        node.text = text;
+      if (child.textContent) {
+        const text = trimNewlines(child.textContent);
+        if (text) {
+          node.text = text;
+        }
       }
     }
   }

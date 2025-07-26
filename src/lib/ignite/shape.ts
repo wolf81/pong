@@ -1,4 +1,4 @@
-import { vector } from "./vector";
+import { Vector } from "./vector";
 
 export type Rect = { kind: "rect"; x: number; y: number; w: number; h: number };
 export type Circle = { kind: "circle"; x: number; y: number; r: number };
@@ -13,11 +13,11 @@ export const Shape = {
     return { kind: "circle", x: x, y: y, r: r };
   },
 
-  min(shape: Shape): vector {
+  min(shape: Shape): Vector {
     return { x: shape.x, y: shape.y };
   },
 
-  mid(shape: Shape): vector {
+  mid(shape: Shape): Vector {
     switch (shape.kind) {
       case "circle":
         return { x: shape.x + shape.r, y: shape.y + shape.r };
@@ -26,7 +26,7 @@ export const Shape = {
     }
   },
 
-  max(shape: Shape): vector {
+  max(shape: Shape): Vector {
     switch (shape.kind) {
       case "circle":
         return { x: shape.x + shape.r * 2, y: shape.y + shape.r * 2 };
@@ -35,7 +35,7 @@ export const Shape = {
     }
   },
 
-  containsPoint(shape: Shape, p: vector): boolean {
+  containsPoint(shape: Shape, p: Vector): boolean {
     switch (shape.kind) {
       case "circle":
         return circleContainsPoint(shape, p);
@@ -66,7 +66,7 @@ export const Shape = {
 
 // Private
 
-function rectContainsPoint(rect: Rect, point: vector): boolean {
+function rectContainsPoint(rect: Rect, point: Vector): boolean {
   const x2 = rect.x + rect.w;
   const y2 = rect.y + rect.h;
   return (
@@ -74,7 +74,7 @@ function rectContainsPoint(rect: Rect, point: vector): boolean {
   );
 }
 
-function circleContainsPoint(circle: Circle, point: vector): boolean {
+function circleContainsPoint(circle: Circle, point: Vector): boolean {
   const cx = circle.x + circle.r;
   const cy = circle.y + circle.r;
   const dx = cx - point.x;

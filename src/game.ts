@@ -8,6 +8,7 @@ import {
   ServiceLocator,
   Timer,
   Renderer,
+  InputAction,
 } from "./lib/ignite";
 
 /**
@@ -38,7 +39,7 @@ export class Game {
   update(dt: number) {
     this._sceneManager.update(dt);
 
-    if (this._inputListener.wasKeyReleased("F1")) {
+    if (this._inputListener.isInputReleased(InputAction.ButtonL)) {
       Settings.showFps = !Settings.showFps;
       Settings.showDraws = !Settings.showDraws;
     }

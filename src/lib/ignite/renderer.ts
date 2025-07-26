@@ -1,3 +1,6 @@
+import { Camera } from "./camera";
+import { Sprite } from "./spritesheet";
+
 type Drawable = HTMLCanvasElement | HTMLImageElement;
 
 export type TextAlign = "left" | "right" | "center";
@@ -22,11 +25,14 @@ export class Renderer {
 
   /**
    * Call startFrame() when a new frame is being rendered. Internally this
-   * method will reset the draws count and clear the render context.
+   * method will reset the draws count and clears the render context.
+   * @param clearColor A color to clear the canvas width.
    */
-  startFrame() {
+  startFrame(clearColor: string = "#00000000") {
     this._draws = 0;
-    this._ctx.clearRect(0, 0, this._ctx.canvas.width, this._ctx.canvas.height);
+    this._ctx.fillStyle = clearColor;
+    this._ctx.fillRect(0, 0, this._ctx.canvas.width, this._ctx.canvas.height);
+    this._ctx.fillStyle = "#ffffff";
   }
 
   /**
@@ -100,4 +106,51 @@ export class Renderer {
     this._ctx.fillStyle = options.color ?? "#ffffff";
     this._ctx.fillText(text, x, y + h / 2);
   }
+
+  /**
+   * Draw a sprite.
+   * @param image The sprite sheet image.
+   * @param sprite The sprite from the sprite sheet image.
+   * @param x The x position, in pixels.
+   * @param y The y position, in pixels.
+   * @param ox An optional x offset.
+   * @param oy An optional y offset.
+   */
+  drawSprite(
+    image: HTMLImageElement,
+    sprite: Sprite,
+    x: number,
+    y: number,
+    ox: number = 0,
+    oy: number = 0
+  ) {
+    this._draws += 1;
+
+    this._ctx.drawImage(
+      image,
+      sprite.x,
+      sprite.y,
+      sprite.w,
+      sprite.h,
+      x + ox,
+      y + oy,
+      sprite.w,
+      sprite.h
+    );
+  }
+
+  /**
+   * Apply camera transformations before rendering. Call without argument to
+   * reset transformations.
+   * @param camera
+   */
+  applyCamera(camera?: Camera) {
+    if (camera) {
+      this._ctx.save();
+      this._ctx.scale(camera.scale, camera.scale);
+      this._ctx.translate(-camera.pos.x, -camera.pos.y);
+    } else {
+      this._ctx.restore();
+    }
+  }  
 }
