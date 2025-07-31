@@ -146,15 +146,18 @@ class Border<T extends Layoutable> extends Layout<T> {
   }
 
   protected expandChildren(): void {
-    let w = this.margin.l + this.margin.r;
-    let h = this.margin.t + this.margin.b;
+    let w = 0;
+    let h = 0;
     for (const ch of this.children) {
       if (ch.expSize) {
         w = Math.max(w, ch.expSize.w);
         h = Math.max(h, ch.expSize.h);
       }
     }
-    this.expSize = { w: w, h: h };
+    this.expSize = {
+      w: w + this.margin.l + this.margin.r,
+      h: h + this.margin.t + this.margin.b,
+    };
   }
 
   protected layoutChildren(rect: Rect): void {
@@ -302,6 +305,5 @@ export const Tidy = {
 
   margin(l: number, t: number, r: number, b: number): Margin {
     return { l: l, t: t, r: r, b: b };
-  }
-}
-
+  },
+};

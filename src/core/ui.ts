@@ -1,6 +1,5 @@
 import { TextureHelper } from "../helpers/texture_helper";
 import {
-  vector,
   ServiceLocator,
   AssetLoader,
   Layoutable,
@@ -9,12 +8,13 @@ import {
   Renderer,
   Elem,
   Tidy,
+  Vector,
 } from "../lib/ignite";
 
 type FontFamily = "Jumpman";
 type Drawable = HTMLCanvasElement | HTMLImageElement;
 type Mouse = {
-  pos: vector;
+  pos: Vector;
   buttonState: "none" | "down" | "up";
 };
 

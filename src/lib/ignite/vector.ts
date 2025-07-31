@@ -36,6 +36,11 @@ export const Vector = {
     return { x: v.x, y: v.y };
   },
 
+  copy(to: Vector, from: Vector) {
+    to.x = from.x;
+    to.y = from.y;
+  },
+
   length(v: Vector): number {
     return Math.hypot(v.x, v.y);
   },
@@ -46,6 +51,6 @@ export const Vector = {
   },
 
   isEqual(v1: Vector, v2: Vector): boolean {
-    return v1.x === v2.x && v1.y === v2.y
-  }
+    return v1.x === v2.x && v1.y === v2.y;
+  },
 };

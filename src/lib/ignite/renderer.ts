@@ -122,9 +122,17 @@ export class Renderer {
     x: number,
     y: number,
     ox: number = 0,
-    oy: number = 0
+    oy: number = 0,
+    rot: number = 0
   ) {
     this._draws += 1;
+
+    const cx = x + ox;
+    const cy = y + oy;
+
+    this._ctx.save();
+    this._ctx.translate(cx + sprite.w, cy + sprite.h);
+    this._ctx.rotate(rot - Math.PI / 2);
 
     this._ctx.drawImage(
       image,
@@ -132,11 +140,13 @@ export class Renderer {
       sprite.y,
       sprite.w,
       sprite.h,
-      x + ox,
-      y + oy,
+      -sprite.w / 2,
+      -sprite.h / 2,
       sprite.w,
       sprite.h
     );
+
+    this._ctx.restore();
   }
 
   /**
@@ -152,5 +162,5 @@ export class Renderer {
     } else {
       this._ctx.restore();
     }
-  }  
+  }
 }

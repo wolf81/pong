@@ -24,4 +24,8 @@ export * from './service_locator'
 
 export * from './spritesheet'
 
+export * from './sprite_animation'
+
 export * from './camera'
+
+export * from './ecs'

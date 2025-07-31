@@ -1,4 +1,4 @@
-import { Sprite, Spritesheet } from "./spritesheet";
+import { SpriteSheet, Spritesheet } from "./spritesheet";
 import { XmlNode, XmlParser } from "./xml_parser";
 
 function getFileName(path: string): string {
@@ -24,7 +24,8 @@ export class AssetLoader {
   private _imageRegistry = new Map<string, HTMLImageElement>();
   private _audioRegistry = new Map<string, HTMLAudioElement>();
   private _xmlRegistry = new Map<string, XmlNode>();
-  private _spriteSheetRegistry = new Map<string, Sprite[]>();
+  private _jsonRegistry = new Map<string, any>();
+  private _spriteSheetRegistry = new Map<string, SpriteSheet>();
 
   /**
    * Get an image asset by name.
@@ -47,10 +48,19 @@ export class AssetLoader {
   /**
    * Get a XML document by name.
    * @param name The filename without extension.
-   * @returns 
+   * @returns
    */
   getXml(name: string): XmlNode {
     return this._xmlRegistry.get(name)!;
+  }
+
+  /**
+   * Get a JSON document by name.
+   * @param name The filename without extension.
+   * @returns
+   */
+  getJson<T>(name: string): T {
+    return this._jsonRegistry.get(name) as T;
   }
 
   /**
@@ -59,8 +69,8 @@ export class AssetLoader {
    * @param index
    * @returns
    */
-  getSpriteSheet(name: string) {
-    return this._spriteSheetRegistry.get(name);
+  getSpriteSheet(name: string): SpriteSheet {
+    return this._spriteSheetRegistry.get(name)!;
   }
 
   /**
@@ -116,9 +126,16 @@ export class AssetLoader {
           continue;
         }
 
+        if (url.endsWith(".json")) {
+          const data = await fetch(url);
+          const json = await data.json();
+          this._jsonRegistry.set(getFileName(filePath), json);
+          continue;
+        }
+
         if (url.endsWith(".xml")) {
           const data = await fetch(url);
-          const xmlString = await data.text()
+          const xmlString = await data.text();
           const xml = XmlParser.parse(xmlString);
           this._xmlRegistry.set(getFileName(filePath), xml);
           continue;
@@ -136,6 +153,6 @@ export class AssetLoader {
   loadSpriteSheet(xmlName: string) {
     const xml = this.getXml(xmlName);
     const spriteSheet = Spritesheet.new(xml);
-    this._spriteSheetRegistry.set(spriteSheet.image, spriteSheet.sprites);
-  }  
+    this._spriteSheetRegistry.set(spriteSheet.image, spriteSheet);
+  }
 }
