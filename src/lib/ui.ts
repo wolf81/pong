@@ -323,6 +323,8 @@ export class Layout {
   }
 
   update(dt: number) {
+    if (this._size.w === 0 || this._size.h === 0) return;
+
     let { x, y } = this._inputListener.getMousePosition();
 
     if (x < 0 || x >= this._size.w || y < 0 || y >= this._size.h) {
@@ -344,6 +346,8 @@ export class Layout {
   }
 
   draw(renderer: Renderer) {
+    if (this._size.w === 0 || this._size.h === 0) return;
+
     for (let [child, _] of this._children) {
       child.draw(renderer);
     }
