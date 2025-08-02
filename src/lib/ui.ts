@@ -58,6 +58,7 @@ export type ControlOptions = {
 export type ButtonOptions = ControlOptions & {
   style: ButtonStyle;
   enabled: () => boolean;
+  click: () => void;
 };
 
 const DEFAULT_BUTTON_OPTIONS: ButtonOptions = {
@@ -73,15 +74,19 @@ const DEFAULT_BUTTON_OPTIONS: ButtonOptions = {
     },
   },
   enabled: () => true,
+  click: () => {},
 };
 
 export abstract class Control {
   private _minSize: Size;
   private _stretch: Stretch;
 
-  enabled: boolean = true;
-
+  protected _enabled: boolean = true;
   protected _state: ControlState = ControlState.Normal;
+
+  get enabled(): boolean {
+    return this._enabled;
+  }
 
   get state(): ControlState {
     return this._state;
@@ -103,7 +108,7 @@ export abstract class Control {
   abstract update(dt: number, input: InputState): void;
 
   hitTest(x: number, y: number): Control | undefined {
-    if (!this.enabled) return undefined;
+    if (!this._enabled) return undefined;
 
     const isHit =
       x >= this._frame.x &&
@@ -138,6 +143,7 @@ export class Button extends Control {
   private readonly _title: string;
 
   private _content!: HTMLCanvasElement;
+  private _wasHit: boolean = false;
 
   constructor(title: string, options: ButtonOptions) {
     super(options.minSize, options.stretch);
@@ -155,18 +161,30 @@ export class Button extends Control {
   update(dt: number, input: InputState): void {
     const { x, y } = input.mouse.pos;
 
-    const isHit = this.hitTest(x, y) === this;
+    const isHover = this.hitTest(x, y) === this;
+    const isHit = isHover && input.mouse.button1;
 
+    const enabled = this._options.enabled();
     let state: ControlState = ControlState.Normal;
-
     state = isHit
-      ? input.mouse.button1
-        ? ControlState.Active
-        : ControlState.Hover
+      ? ControlState.Active
+      : isHover
+      ? ControlState.Hover
       : ControlState.Normal;
 
-    if (state !== this._state) {
+    const isRelease = this._wasHit && isHover && !input.mouse.button1;
+    this._wasHit = isHover && input.mouse.button1;
+
+    if (isRelease) {
+      this._options.click();
+    }
+
+    const stateChanged = state !== this._state;
+    const enabledChanged = enabled !== this._enabled;
+
+    if (stateChanged || enabledChanged) {
       this._state = state;
+      this._enabled = enabled;
 
       this.updateContent();
     }
@@ -178,9 +196,10 @@ export class Button extends Control {
   }
 
   private updateContent() {
-    // update background
     const { w, h } = this._frame;
     this._content = TextureHelper.generate(w, h, (ctx) => {
+      ctx.save();
+
       if (!this.enabled) {
         ctx.globalAlpha = 0.5;
       }
@@ -211,7 +230,7 @@ export class Button extends Control {
       const textY = Math.floor((h + textH) / 2);
       ctx.fillText(this._title, textX, textY);
 
-      ctx.globalAlpha = 1.0;
+      ctx.restore();
     });
   }
 }
@@ -295,7 +314,11 @@ export class Layout {
 
     for (let [child, _] of this._children) {
       const input: InputState = {
-        mouse: { pos: { x, y }, button1: false, button2: false },
+        mouse: {
+          pos: { x, y },
+          button1: this._inputListener.isMouseDown,
+          button2: false,
+        },
       };
 
       child.update(dt, input);
@@ -321,3 +344,7 @@ export const UI = {
     );
   },
 };
+
+function isColorString(text: string): boolean {
+  return text.startsWith("#") || text.startsWith("rgb(");
+}
