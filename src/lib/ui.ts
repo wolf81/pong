@@ -6,6 +6,27 @@ type Pos = { x: number; y: number };
 type Size = { w: number; h: number };
 type Frame = Pos & Size;
 
+export type ButtonStyle = {
+  font: string;
+  textColor: string;
+  normalColor: string;
+  hoverColor: string;
+  activeColor: string;
+};
+
+export type Style = {
+  button: ButtonStyle;
+};
+
+const BUTTON_STYLE: ButtonStyle = {
+  font: "16px Arial",
+  textColor: "#ffffff",
+  normalColor: "#2979FF",
+  hoverColor: "#5393FF",
+  activeColor: "#1C54B2",
+};
+const BUTTON_SIZE: Size = { w: 100, h: 40 };
+
 type InputState = {
   mouse: { pos: Pos; button1: boolean; button2: boolean };
 };
@@ -40,7 +61,7 @@ export type ControlOptions = {
 };
 
 export type ButtonOptions = ControlOptions & {
-  background: Partial<Record<ControlState, string>>;
+  style: Partial<ButtonStyle>;
 };
 
 export abstract class Control {
@@ -101,19 +122,20 @@ export abstract class Control {
 }
 
 export class Button extends Control {
-  private readonly _options: ButtonOptions;
+  private readonly _style: ButtonStyle;
 
-  constructor(options: ButtonOptions) {
-    super(options.minSize, options.stretch);
+  private _background: string = "#ccc";
 
-    this._options = options;
+  constructor(minSize: Size, stretch: Stretch, style: ButtonStyle) {
+    super(minSize, stretch);
+
+    this._style = style;
   }
 
   draw(renderer: Renderer): void {
     const { x, y, w, h } = this._frame;
 
-    const background = this._options.background[this.state]!;
-    renderer.drawRect(x, y, w, h, background);
+    renderer.drawRect(x, y, w, h, this._background);
   }
 
   update(dt: number, input: InputState): void {
@@ -126,6 +148,16 @@ export class Button extends Control {
         ? ControlState.Active
         : ControlState.Hover
       : ControlState.Normal;
+
+    this._background = this._style.normalColor;
+    switch (this._state) {
+      case ControlState.Hover:
+        this._background = this._style.hoverColor;
+        break;
+      case ControlState.Active:
+        this._background = this._style.activeColor;
+        break;
+    }
   }
 }
 
@@ -228,24 +260,16 @@ export const UI = {
   },
 
   button(options: Partial<ButtonOptions>): Button {
-    const w = options.minSize?.w ?? 100;
-    const h = options.minSize?.h ?? 40;
+    const minSize = options.minSize ?? BUTTON_SIZE;
 
-    const normalBackgroundColor =
-      options.background?.[ControlState.Normal] || "#ccc";
-
-    const background: Record<ControlState, string> = {
-      [ControlState.Normal]: normalBackgroundColor,
-      [ControlState.Hover]:
-        options.background?.[ControlState.Hover] || normalBackgroundColor,
-      [ControlState.Active]:
-        options.background?.[ControlState.Hover] || normalBackgroundColor,
+    let buttonStyle: ButtonStyle = {
+      textColor: options.style?.textColor ?? BUTTON_STYLE.textColor,
+      normalColor: options.style?.normalColor ?? BUTTON_STYLE.normalColor,
+      hoverColor: options.style?.hoverColor ?? BUTTON_STYLE.hoverColor,
+      activeColor: options.style?.activeColor ?? BUTTON_STYLE.activeColor,
+      font: options.style?.font ?? BUTTON_STYLE.font,
     };
 
-    return new Button({
-      minSize: { w, h },
-      stretch: Stretch.none,
-      background: background,
-    });
+    return new Button(minSize, Stretch.none, buttonStyle);
   },
 };
