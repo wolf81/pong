@@ -9,8 +9,6 @@ type Pos = { x: number; y: number };
 type Size = { w: number; h: number };
 type Frame = Pos & Size;
 
-type Drawable = HTMLImageElement | HTMLCanvasElement;
-
 export type ButtonStyle = {
   font: string;
   textColor: string;
@@ -21,8 +19,13 @@ export type ButtonStyle = {
   };
 };
 
+export type PanelStyle = {
+  background: string;
+};
+
 export type Style = {
   button: ButtonStyle;
+  panel: PanelStyle;
 };
 
 let defaultStyle: Style = {
@@ -34,6 +37,9 @@ let defaultStyle: Style = {
       hover: "#5393FF",
       active: "#1C54B2",
     },
+  },
+  panel: {
+    background: "#6767cc",
   },
 };
 
@@ -345,6 +351,7 @@ export class Layout {
 }
 
 export class Panel extends Control {
+  private _background!: HTMLCanvasElement;
   private _options: PanelOptions;
   private _children: Control[];
 
@@ -390,6 +397,17 @@ export class Panel extends Control {
       child.setFrame(x + padding, childY, childW, childSize.h);
       childY += this._options.spacing + childSize.h;
     }
+
+    this._background = TextureHelper.generate(w, h, (ctx) => {
+      const bg = this._options.background;
+      if (isColorString(bg)) {
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+      } else {
+        const image = TextureHelper.stretch(getImage(bg), w, h, 10);
+        ctx.drawImage(image, 0, 0);
+      }
+    });
   }
 
   update(dt: number, input: InputState): void {
@@ -401,7 +419,7 @@ export class Panel extends Control {
   draw(renderer: Renderer): void {
     const { x, y, w, h } = this._frame;
 
-    renderer.drawRect(x, y, w, h, this._options.background);
+    renderer.drawImage(this._background, x, y);
 
     for (let child of this._children) {
       child.draw(renderer);

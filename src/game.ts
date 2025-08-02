@@ -32,9 +32,9 @@ export class Game {
     await assetLoader.preload();
     ServiceLocator.register(AssetLoader, assetLoader);
 
-    // this._sceneManager.switch(new GamePlayScene());
+    this._sceneManager.switch(new GamePlayScene());
 
-    // this._sceneManager.push(new MainMenuScene());
+    this._sceneManager.push(new MainMenuScene());
 
     this._sceneManager.switch(new TestScene());
   }
