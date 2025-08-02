@@ -19,6 +19,11 @@ export type ButtonStyle = {
   };
 };
 
+export type LabelStyle = {
+  font: string;
+  textColor: string;
+};
+
 export type PanelStyle = {
   background: string;
 };
@@ -26,6 +31,7 @@ export type PanelStyle = {
 export type Style = {
   button: ButtonStyle;
   panel: PanelStyle;
+  label: LabelStyle;
 };
 
 let defaultStyle: Style = {
@@ -40,6 +46,10 @@ let defaultStyle: Style = {
   },
   panel: {
     background: "#6767cc",
+  },
+  label: {
+    font: "16px Arial",
+    textColor: "#333333",
   },
 };
 
@@ -84,6 +94,18 @@ const DEFAULT_BUTTON_OPTIONS: ButtonOptions = {
   style: defaultStyle.button,
   enabled: () => true,
   click: () => {},
+};
+
+export type LabelOptions = ControlOptions & {
+  style: LabelStyle;
+  align: "left" | "center" | "right";
+};
+
+const DEFAULT_LABEL_OPTIONS: LabelOptions = {
+  minSize: { w: 0, h: 40 },
+  stretch: Stretch.horz,
+  style: defaultStyle.label,
+  align: "left",
 };
 
 export type PanelOptions = ControlOptions & {
@@ -253,6 +275,34 @@ type ControlInfo = {
   pos: Pos;
   anchor: Anchor;
 };
+
+export class Label extends Control {
+  private _text: string;
+  private readonly _options: LabelOptions;
+
+  constructor(text: string, options: LabelOptions) {
+    super(options.minSize, options.stretch);
+
+    this._text = text;
+    this._options = options;
+  }
+
+  override getSize(constraint: Size): Size {
+    const size = super.getSize(constraint);
+    return size;
+  }
+
+  update(dt: number, input: InputState): void {}
+
+  draw(renderer: Renderer): void {
+    const { x, y, w, h } = this._frame;
+    renderer.drawText(this._text, x + w / 2, y + h / 2, {
+      font: this._options.style.font,
+      color: this._options.style.textColor,
+      align: this._options.align,
+    });
+  }
+}
 
 export class Layout {
   private readonly _inputListener: InputListener;
@@ -442,6 +492,13 @@ export const UI = {
    */
   layout(): Layout {
     return new Layout();
+  },
+
+  label(text: string, options?: DeepPartial<LabelOptions>): Label {
+    return new Label(
+      text,
+      DeepPartial.merge(DEFAULT_LABEL_OPTIONS, options || {})
+    );
   },
 
   /**

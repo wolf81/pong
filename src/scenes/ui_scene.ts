@@ -1,4 +1,4 @@
-import { ButtonStyle, Layout, UI } from "../lib/ui";
+import { ButtonStyle, Layout, Style, UI } from "../lib/ui";
 import { Renderer } from "../lib/renderer";
 import { Scene } from "../lib/scene_manager";
 import { CANVAS_H, CANVAS_W } from "../constants";
@@ -11,25 +11,35 @@ export class TestSceen extends Scene {
   constructor() {
     super();
 
+    UI.setStyle(uiStyle);
+
+    const label = UI.label("Pong!", {
+      align: "center",
+      style: {
+        font: "40px Jumpman",
+        textColor: "#ee2747",
+      },
+    });
+
     const button1 = UI.button("Start", {
-      minSize: { w: 100, h: 100 },
-      style: blackPink,
+      minSize: { w: 192, h: 64 },
+      // style: blackPink,
+      // style: menuButtonStyle,
       enabled: () => this._blackPinkEnabled,
     });
 
     const button2 = UI.button("Settings", {
       minSize: { w: 192, h: 64 },
-      style: menuButtonStyle,
+      // style: blackPink,
       click: () => (this._blackPinkEnabled = !this._blackPinkEnabled),
     });
 
     const button3 = UI.button("Quit", {
       minSize: { w: 300 - 32, h: 64 },
-      style: menuButtonStyle,
       click: () => (this._blackPinkEnabled = !this._blackPinkEnabled),
     });
 
-    const panel = UI.panel([button1, button2, button3], {
+    const panel = UI.panel([label, button1, button2, button3], {
       background: "button_square_border",
       padding: 16,
       spacing: 16,
@@ -68,12 +78,21 @@ const blackPink: Partial<ButtonStyle> = {
   },
 };
 
-const menuButtonStyle: Partial<ButtonStyle> = {
-  font: "32px Jumpman",
-  textColor: "#eeeeee",
-  background: {
-    normal: "button_square_depth_flat",
-    hover: "button_square_depth_gloss",
-    active: "button_square_gloss",
+const uiStyle: Style = {
+  button: {
+    font: "32px Jumpman",
+    textColor: "#eeeeee",
+    background: {
+      normal: "button_square_depth_flat",
+      hover: "button_square_depth_gloss",
+      active: "button_square_gloss",
+    },
+  },
+  label: {
+    font: "40px Jumpman",
+    textColor: "#ee2747",
+  },
+  panel: {
+    background: "button_square_border",
   },
 };
