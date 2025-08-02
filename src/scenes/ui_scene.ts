@@ -1,4 +1,4 @@
-import { ButtonStyle, Layout, Style, UI } from "../lib/ui";
+import { ButtonStyle, Layout, Stretch, Style, UI } from "../lib/ui";
 import { Renderer } from "../lib/renderer";
 import { Scene } from "../lib/scene_manager";
 import { CANVAS_H, CANVAS_W } from "../constants";
@@ -22,21 +22,24 @@ export class TestSceen extends Scene {
     });
 
     const button1 = UI.button("Start", {
-      minSize: { w: 192, h: 64 },
       // style: blackPink,
       // style: menuButtonStyle,
-      enabled: () => this._blackPinkEnabled,
+      options: {
+        enabled: () => this._blackPinkEnabled,
+      },
     });
 
     const button2 = UI.button("Settings", {
-      minSize: { w: 192, h: 64 },
+      options: {
+        click: () => (this._blackPinkEnabled = !this._blackPinkEnabled),
+      },
       // style: blackPink,
-      click: () => (this._blackPinkEnabled = !this._blackPinkEnabled),
     });
 
     const button3 = UI.button("Quit", {
-      minSize: { w: 300 - 32, h: 64 },
-      click: () => (this._blackPinkEnabled = !this._blackPinkEnabled),
+      options: {
+        click: () => (this._blackPinkEnabled = !this._blackPinkEnabled),
+      },
     });
 
     const panel = UI.panel([label, button1, button2, button3], {
@@ -49,6 +52,8 @@ export class TestSceen extends Scene {
 
     this._ui.addChild(panel, center, {
       anchor: "center",
+      minSize: { w: 120, h: 700 },
+      stretch: Stretch.all,
     });
     this._ui.resize(CANVAS_W, CANVAS_H);
   }
@@ -84,6 +89,7 @@ const blackPink: Partial<ButtonStyle> = {
 
 const uiStyle: Style = {
   button: {
+    minSize: { w: 300 - 32, h: 64 },
     font: "32px Jumpman",
     textColor: "#eeeeee",
     background: {
