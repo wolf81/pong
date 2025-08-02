@@ -14,7 +14,6 @@ enum ControlState {
   Normal,
   Hover,
   Active,
-  Disabled,
 }
 
 type Anchor =
@@ -47,19 +46,8 @@ export type ButtonOptions = ControlOptions & {
 export abstract class Control {
   private _minSize: Size;
   private _stretch: Stretch;
-  private _enabled: boolean = true;
 
-  get enabled(): boolean {
-    return this._enabled;
-  }
-
-  set enabled(isEnabled: boolean) {
-    this._enabled = isEnabled;
-
-    if (!this._enabled) {
-      this._state = ControlState.Disabled;
-    }
-  }
+  enabled: boolean = true;
 
   protected _state: ControlState = ControlState.Normal;
 
@@ -83,7 +71,7 @@ export abstract class Control {
   abstract update(dt: number, input: InputState): void;
 
   hitTest(x: number, y: number): Control | undefined {
-    if (!this._enabled) return undefined;
+    if (!this.enabled) return undefined;
 
     const isHit =
       x >= this._frame.x &&
@@ -251,8 +239,6 @@ export const UI = {
       [ControlState.Hover]:
         options.background?.[ControlState.Hover] || normalBackgroundColor,
       [ControlState.Active]:
-        options.background?.[ControlState.Hover] || normalBackgroundColor,
-      [ControlState.Disabled]:
         options.background?.[ControlState.Hover] || normalBackgroundColor,
     };
 
