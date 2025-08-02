@@ -28,10 +28,6 @@ export class TestSceen extends Scene {
 
     const panel = UI.panel([button1, button2, button3]);
     this._ui.addChild(panel, { x: CANVAS_W / 2, y: CANVAS_H / 2 }, "center");
-
-    // this._ui.addChild(button1, { x: 0, y: CANVAS_H }, "bottom-left");
-    // this._ui.addChild(button2, { x: CANVAS_W / 2, y: CANVAS_H / 2 }, "right");
-    // this._ui.addChild(button3, { x: CANVAS_W, y: CANVAS_H }, "bottom-right");
     this._ui.resize(CANVAS_W, CANVAS_H);
   }
 
