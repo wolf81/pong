@@ -45,7 +45,11 @@ export class TestSceen extends Scene {
       spacing: 16,
     });
 
-    this._ui.addChild(panel, { x: CANVAS_W / 2, y: CANVAS_H / 2 }, "center");
+    const center = { x: CANVAS_W / 2, y: CANVAS_H / 2 };
+
+    this._ui.addChild(panel, center, {
+      anchor: "center",
+    });
     this._ui.resize(CANVAS_W, CANVAS_H);
   }
 
@@ -89,6 +93,7 @@ const uiStyle: Style = {
     },
   },
   label: {
+    padding: 20,
     font: "40px Jumpman",
     textColor: "#ee2747",
   },
