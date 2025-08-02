@@ -1,3 +1,4 @@
+import { TextureHelper } from "../helpers/texture_helper";
 import { DeepPartial } from "./deep_partial";
 import { InputListener } from "./input_listener";
 import { Renderer } from "./renderer";
@@ -10,13 +11,11 @@ type Frame = Pos & Size;
 export type ButtonStyle = {
   font: string;
   textColor: string;
-  background: BackgroundStyle;
-};
-
-export type BackgroundStyle = {
-  normal: string;
-  hover: string;
-  active: string;
+  background: {
+    normal: string;
+    hover: string;
+    active: string;
+  };
 };
 
 export type Style = {
@@ -58,9 +57,10 @@ export type ControlOptions = {
 
 export type ButtonOptions = ControlOptions & {
   style: ButtonStyle;
+  enabled: () => boolean;
 };
 
-const DEF_BUTTON_OPTIONS: ButtonOptions = {
+const DEFAULT_BUTTON_OPTIONS: ButtonOptions = {
   minSize: { w: 100, h: 40 },
   stretch: Stretch.none,
   style: {
@@ -72,6 +72,7 @@ const DEF_BUTTON_OPTIONS: ButtonOptions = {
       active: "#1C54B2",
     },
   },
+  enabled: () => true,
 };
 
 export abstract class Control {
@@ -134,18 +135,21 @@ export abstract class Control {
 export class Button extends Control {
   private readonly _options: ButtonOptions;
 
-  private _background: string = "#ccc";
+  private readonly _title: string;
 
-  constructor(options: ButtonOptions) {
+  private _content!: HTMLCanvasElement;
+
+  constructor(title: string, options: ButtonOptions) {
     super(options.minSize, options.stretch);
 
+    this._title = title;
     this._options = options;
   }
 
-  draw(renderer: Renderer): void {
-    const { x, y, w, h } = this._frame;
+  override setFrame(x: number, y: number, w: number, h: number): void {
+    super.setFrame(x, y, w, h);
 
-    renderer.drawRect(x, y, w, h, this._background);
+    this.updateContent();
   }
 
   update(dt: number, input: InputState): void {
@@ -153,23 +157,62 @@ export class Button extends Control {
 
     const isHit = this.hitTest(x, y) === this;
 
-    this._state = isHit
+    let state: ControlState = ControlState.Normal;
+
+    state = isHit
       ? input.mouse.button1
         ? ControlState.Active
         : ControlState.Hover
       : ControlState.Normal;
 
-    const style = this._options.style;
+    if (state !== this._state) {
+      this._state = state;
 
-    this._background = style.background.normal!;
-    switch (this._state) {
-      case ControlState.Hover:
-        this._background = style.background.hover!;
-        break;
-      case ControlState.Active:
-        this._background = style.background.active!;
-        break;
+      this.updateContent();
     }
+  }
+
+  draw(renderer: Renderer): void {
+    const { x, y } = this._frame;
+    renderer.drawImage(this._content, x, y);
+  }
+
+  private updateContent() {
+    // update background
+    const { w, h } = this._frame;
+    this._content = TextureHelper.generate(w, h, (ctx) => {
+      if (!this.enabled) {
+        ctx.globalAlpha = 0.5;
+      }
+
+      switch (this._state) {
+        case ControlState.Active:
+          ctx.fillStyle = this._options.style.background.active;
+          break;
+        case ControlState.Hover:
+          ctx.fillStyle = this._options.style.background.hover;
+          break;
+        case ControlState.Normal:
+          ctx.fillStyle = this._options.style.background.normal;
+          break;
+      }
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.font = this._options.style.font;
+      const heightMetrics = ctx.measureText("Mg");
+      // For text height use a consistent height regardless of letters in text.
+      const textH =
+        heightMetrics.actualBoundingBoxAscent +
+        heightMetrics.actualBoundingBoxDescent;
+      const textW = ctx.measureText(this._title).width;
+
+      ctx.fillStyle = this._options.style.textColor;
+      const textX = Math.floor((w - textW) / 2);
+      const textY = Math.floor((h + textH) / 2);
+      ctx.fillText(this._title, textX, textY);
+
+      ctx.globalAlpha = 1.0;
+    });
   }
 }
 
@@ -271,7 +314,10 @@ export const UI = {
     return new Layout();
   },
 
-  button(options: DeepPartial<ButtonOptions>): Button {
-    return new Button(DeepPartial.merge(DEF_BUTTON_OPTIONS, options));
+  button(title: string, options?: DeepPartial<ButtonOptions>): Button {
+    return new Button(
+      title,
+      DeepPartial.merge(DEFAULT_BUTTON_OPTIONS, options || {})
+    );
   },
 };
