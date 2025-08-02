@@ -1,4 +1,4 @@
-import { ButtonStyle, Layout, Style, UI } from "../lib/ui";
+import { ButtonOptions, ButtonStyle, Layout, UI } from "../lib/ui";
 import { Renderer } from "../lib/renderer";
 import { Scene } from "../lib/scene_manager";
 import { CANVAS_H, CANVAS_W } from "../constants";
@@ -23,10 +23,13 @@ export class TestSceen extends Scene {
     });
 
     const button3 = UI.button("Herro World!", {
+      minSize: { w: 192, h: 64 },
+      style: menuButtonStyle,
       click: () => (this._blackPinkEnabled = !this._blackPinkEnabled),
     });
 
     const panel = UI.panel([button1, button2, button3]);
+
     this._ui.addChild(panel, { x: CANVAS_W / 2, y: CANVAS_H / 2 }, "center");
     this._ui.resize(CANVAS_W, CANVAS_H);
   }
@@ -44,7 +47,7 @@ const mutedGray: Partial<ButtonStyle> = {
   font: "16px Arial",
   textColor: "#fff",
   background: {
-    normal: "#444",
+    normal: "button_square_flat",
     hover: "#555",
     active: "#666",
   },
@@ -57,5 +60,15 @@ const blackPink: Partial<ButtonStyle> = {
     normal: "#EBA9B4",
     hover: "#E38494",
     active: "#CC6B7C",
+  },
+};
+
+const menuButtonStyle: Partial<ButtonStyle> = {
+  font: "32px Jumpman",
+  textColor: "#eeeeee",
+  background: {
+    normal: "button_square_depth_flat",
+    hover: "button_square_depth_gloss",
+    active: "button_square_gloss",
   },
 };
