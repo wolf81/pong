@@ -22,6 +22,7 @@ export type ButtonStyle = {
 export type LabelStyle = {
   font: string;
   textColor: string;
+  padding: number;
 };
 
 export type PanelStyle = {
@@ -48,6 +49,7 @@ let defaultStyle: Style = {
     background: "#6767cc",
   },
   label: {
+    padding: 8,
     font: "16px Arial",
     textColor: "#333333",
   },
@@ -77,55 +79,49 @@ export enum Stretch {
   all = 1,
 }
 
-export type ControlOptions = {
-  minSize: { w: number; h: number };
-  stretch: Stretch;
-};
-
-export type ButtonOptions = ControlOptions & {
+export type ButtonOptions = {
   style: ButtonStyle;
+  minSize: Size;
   enabled: () => boolean;
   click: () => void;
 };
 
 const DEFAULT_BUTTON_OPTIONS: ButtonOptions = {
-  minSize: { w: 100, h: 40 },
-  stretch: Stretch.none,
   style: defaultStyle.button,
+  minSize: { w: 100, h: 40 },
   enabled: () => true,
   click: () => {},
 };
 
-export type LabelOptions = ControlOptions & {
+export type LabelOptions = {
   style: LabelStyle;
   align: "left" | "center" | "right";
 };
 
 const DEFAULT_LABEL_OPTIONS: LabelOptions = {
-  minSize: { w: 0, h: 40 },
-  stretch: Stretch.horz,
   style: defaultStyle.label,
   align: "left",
 };
 
-export type PanelOptions = ControlOptions & {
+export type PanelOptions = {
   background: string; // image or color
   padding: number;
   spacing: number;
 };
 
 const DEFAULT_PANEL_OPTIONS: PanelOptions = {
-  minSize: { w: 0, h: 0 },
-  stretch: Stretch.all,
   padding: 10,
   spacing: 10,
   background: "#aaaaaa",
 };
 
-export abstract class Control {
-  private _minSize: Size;
-  private _stretch: Stretch;
+export type LayoutOptions = {
+  minSize: Size;
+  stretch: Stretch;
+  anchor: Anchor;
+};
 
+export abstract class Control {
   protected _enabled: boolean = true;
   protected _state: ControlState = "normal";
 
@@ -138,11 +134,6 @@ export abstract class Control {
   }
 
   protected _frame: Frame = { x: 0, y: 0, w: 0, h: 0 };
-
-  constructor(minSize: Size, stretch: Stretch) {
-    this._minSize = minSize;
-    this._stretch = stretch;
-  }
 
   setFrame(x: number, y: number, w: number, h: number) {
     this._frame = { x, y, w, h };
@@ -164,22 +155,7 @@ export abstract class Control {
     return isHit ? this : undefined;
   }
 
-  getSize(constraint: Size): Size {
-    let size = this._minSize;
-
-    if ((this._stretch & Stretch.horz) !== 0) {
-      size.w = Math.max(constraint.w, size.w);
-    } else {
-      size.w = Math.min(constraint.w, size.w);
-    }
-    if ((this._stretch & Stretch.vert) !== 0) {
-      size.h = Math.max(constraint.h, size.h);
-    } else {
-      size.h = Math.min(constraint.h, size.h);
-    }
-
-    return size;
-  }
+  abstract measure(): Size;
 }
 
 export class Button extends Control {
@@ -191,7 +167,7 @@ export class Button extends Control {
   private _wasHit: boolean = false;
 
   constructor(title: string, options: ButtonOptions) {
-    super(options.minSize, options.stretch);
+    super();
 
     this._title = title;
     this._options = options;
@@ -269,6 +245,10 @@ export class Button extends Control {
       ctx.restore();
     });
   }
+
+  override measure(): Size {
+    return this._options.minSize;
+  }
 }
 
 type ControlInfo = {
@@ -281,15 +261,27 @@ export class Label extends Control {
   private readonly _options: LabelOptions;
 
   constructor(text: string, options: LabelOptions) {
-    super(options.minSize, options.stretch);
+    super();
 
     this._text = text;
     this._options = options;
   }
 
-  override getSize(constraint: Size): Size {
-    const size = super.getSize(constraint);
-    return size;
+  override measure(): Size {
+    const canvas = document.createElement("canvas")!;
+    const ctx = canvas.getContext("2d")!;
+    ctx.font = this._options.style.font;
+    const heightMetrics = ctx.measureText("Mg");
+
+    const totalPadding = this._options.style.padding * 2;
+
+    const w = ctx.measureText(this._text).width + totalPadding;
+    const h =
+      heightMetrics.actualBoundingBoxAscent +
+      heightMetrics.actualBoundingBoxDescent +
+      totalPadding;
+
+    return { w, h };
   }
 
   update(dt: number, input: InputState): void {}
@@ -321,16 +313,19 @@ export class Layout {
   addChild(
     control: Control,
     pos: { x: number; y: number },
-    anchor: Anchor = "top-left"
+    options: Partial<LayoutOptions>
   ) {
-    this._children.set(control, { pos: pos, anchor: anchor });
+    this._children.set(control, {
+      pos: pos,
+      anchor: options.anchor || "top-left",
+    });
   }
 
   resize(w: number, h: number) {
     this._size = { w, h };
 
     for (let [child, info] of this._children) {
-      const { w, h } = child.getSize(this._size);
+      const { w, h } = child.measure();
       let { x, y } = info.pos;
 
       switch (info.anchor) {
@@ -406,13 +401,13 @@ export class Panel extends Control {
   private _children: Control[];
 
   constructor(children: Control[], options: PanelOptions) {
-    super(options.minSize, options.stretch);
+    super();
 
     this._children = children;
     this._options = options;
   }
 
-  override getSize(constraint: Size): Size {
+  override measure(): Size {
     let w = 0;
     let h = 0;
 
@@ -420,11 +415,8 @@ export class Panel extends Control {
     const childCount = this._children.length;
     const totalSpacing = Math.max(childCount - 1, 0) * this._options.spacing;
 
-    let maxW = constraint.w - this._options.padding * 2;
-    let maxH = constraint.h - this._options.padding * 2 - totalSpacing;
-
     for (let child of this._children) {
-      const childSize = child.getSize({ w: maxW, h: maxH });
+      const childSize = child.measure();
       w = Math.max(w, childSize.w);
       h += childSize.h;
     }
@@ -443,7 +435,7 @@ export class Panel extends Control {
     // getSize(), so perhaps cache results of getSize for each child and
     // re-apply here.
     for (let child of this._children) {
-      const childSize = child.getSize({ w: childW, h });
+      const childSize = child.measure();
       child.setFrame(x + padding, childY, childW, childSize.h);
       childY += this._options.spacing + childSize.h;
     }
