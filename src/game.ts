@@ -8,6 +8,7 @@ import { Settings } from "./settings";
 import { MainMenuScene } from "./scenes/main_menu_scene";
 import { UI } from "./core/ui";
 import { Timer } from "./lib/timer";
+import { TestSceen as TestScene } from "./scenes/ui_scene";
 
 /**
  * The Game class contains the core game logic.
@@ -31,9 +32,11 @@ export class Game {
     await assetLoader.preload();
     ServiceLocator.register(AssetLoader, assetLoader);
 
-    this._sceneManager.switch(new GamePlayScene());
+    // this._sceneManager.switch(new GamePlayScene());
 
-    this._sceneManager.push(new MainMenuScene());
+    // this._sceneManager.push(new MainMenuScene());
+
+    this._sceneManager.switch(new TestScene());
   }
 
   update(dt: number) {
