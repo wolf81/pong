@@ -6,30 +6,29 @@ import { CANVAS_H, CANVAS_W } from "../constants";
 export class TestSceen extends Scene {
   private _ui: Layout = UI.layout();
 
+  private _blackPinkEnabled: boolean = true;
+
   constructor() {
     super();
 
-    this._ui.addChild(
-      UI.button("Who am I?", {
-        style: mutedGray,
-        enabled: () => false,
-      }),
-      { x: 0, y: CANVAS_H },
-      "bottom-left"
-    );
-    this._ui.addChild(
-      UI.button("Play", {
-        minSize: { w: 100, h: 100 },
-        style: blackPink,
-      }),
-      { x: CANVAS_W / 2, y: CANVAS_H / 2 },
-      "right"
-    );
-    this._ui.addChild(
-      UI.button("Herro World!"),
-      { x: CANVAS_W, y: CANVAS_H },
-      "bottom-right"
-    );
+    const button1 = UI.button("Who am I?", {
+      style: mutedGray,
+      enabled: () => false,
+    });
+
+    const button2 = UI.button("Play", {
+      minSize: { w: 100, h: 100 },
+      style: blackPink,
+      enabled: () => this._blackPinkEnabled,
+    });
+
+    const button3 = UI.button("Herro World!", {
+      click: () => (this._blackPinkEnabled = !this._blackPinkEnabled),
+    });
+
+    this._ui.addChild(button1, { x: 0, y: CANVAS_H }, "bottom-left");
+    this._ui.addChild(button2, { x: CANVAS_W / 2, y: CANVAS_H / 2 }, "right");
+    this._ui.addChild(button3, { x: CANVAS_W, y: CANVAS_H }, "bottom-right");
     this._ui.resize(CANVAS_W, CANVAS_H);
   }
 
