@@ -1,8 +1,7 @@
-import { Layout, UI } from "../lib/ui";
+import { ButtonStyle, Layout, Style, UI } from "../lib/ui";
 import { Renderer } from "../lib/renderer";
 import { Scene } from "../lib/scene_manager";
 import { CANVAS_H, CANVAS_W } from "../constants";
-import { ControlState } from "../core/ui";
 
 export class TestSceen extends Scene {
   private _ui: Layout = UI.layout();
@@ -12,33 +11,21 @@ export class TestSceen extends Scene {
 
     this._ui.addChild(
       UI.button({
-        background: {
-          [ControlState.Normal]: "#ffbbcc",
-          [ControlState.Hover]: "#ff33aa",
-        },
+        style: mutedGray,
       }),
       { x: 0, y: CANVAS_H },
       "bottom-left"
     );
     this._ui.addChild(
       UI.button({
-        background: {
-          [ControlState.Normal]: "#88aa55",
-          [ControlState.Hover]: "#889933",
-          [ControlState.Active]: "#776633",
-        },
         minSize: { w: 100, h: 100 },
+        style: blackPink,
       }),
       { x: CANVAS_W / 2, y: CANVAS_H / 2 },
       "right"
     );
     this._ui.addChild(
-      UI.button({
-        background: {
-          [ControlState.Normal]: "#4422cc",
-          [ControlState.Hover]: "#4466ff",
-        },
-      }),
+      UI.button({}),
       { x: CANVAS_W, y: CANVAS_H },
       "bottom-right"
     );
@@ -53,3 +40,19 @@ export class TestSceen extends Scene {
     this._ui.draw(renderer);
   }
 }
+
+const mutedGray: Partial<ButtonStyle> = {
+  font: "16px Arial",
+  textColor: "#fff",
+  normalColor: "#444",
+  hoverColor: "#555",
+  activeColor: "#666",
+};
+
+const blackPink: Partial<ButtonStyle> = {
+  font: "16px Arial",
+  textColor: "#000000",
+  normalColor: "#EBA9B4",
+  hoverColor: "#E38494",
+  activeColor: "#CC6B7C",
+};
