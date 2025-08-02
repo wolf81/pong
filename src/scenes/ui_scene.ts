@@ -10,14 +10,15 @@ export class TestSceen extends Scene {
     super();
 
     this._ui.addChild(
-      UI.button({
+      UI.button("Who am I?", {
         style: mutedGray,
+        enabled: () => false,
       }),
       { x: 0, y: CANVAS_H },
       "bottom-left"
     );
     this._ui.addChild(
-      UI.button({
+      UI.button("Play", {
         minSize: { w: 100, h: 100 },
         style: blackPink,
       }),
@@ -25,7 +26,7 @@ export class TestSceen extends Scene {
       "right"
     );
     this._ui.addChild(
-      UI.button({}),
+      UI.button("Herro World!"),
       { x: CANVAS_W, y: CANVAS_H },
       "bottom-right"
     );
