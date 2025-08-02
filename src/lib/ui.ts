@@ -22,6 +22,18 @@ export type Style = {
   button: ButtonStyle;
 };
 
+let defaultStyle: Style = {
+  button: {
+    font: "16px Arial",
+    textColor: "#ffffff",
+    background: {
+      normal: "#2979FF",
+      hover: "#5393FF",
+      active: "#1C54B2",
+    },
+  },
+};
+
 type InputState = {
   mouse: { pos: Pos; button1: boolean; button2: boolean };
 };
@@ -64,17 +76,23 @@ export type ButtonOptions = ControlOptions & {
 const DEFAULT_BUTTON_OPTIONS: ButtonOptions = {
   minSize: { w: 100, h: 40 },
   stretch: Stretch.none,
-  style: {
-    font: "16px Arial",
-    textColor: "#ffffff",
-    background: {
-      normal: "#2979FF",
-      hover: "#5393FF",
-      active: "#1C54B2",
-    },
-  },
+  style: defaultStyle.button,
   enabled: () => true,
   click: () => {},
+};
+
+export type PanelOptions = ControlOptions & {
+  background: string; // image or color
+  padding: number;
+  spacing: number;
+};
+
+const DEFAULT_PANEL_OPTIONS: PanelOptions = {
+  minSize: { w: 0, h: 0 },
+  stretch: Stretch.all,
+  padding: 10,
+  spacing: 10,
+  background: "#aaaaaa",
 };
 
 export abstract class Control {
@@ -332,15 +350,113 @@ export class Layout {
   }
 }
 
+export class Panel extends Control {
+  private _options: PanelOptions;
+  private _children: Control[];
+
+  constructor(children: Control[], options: PanelOptions) {
+    super(options.minSize, options.stretch);
+
+    this._children = children;
+    this._options = options;
+  }
+
+  override getSize(constraint: Size): Size {
+    let w = 0;
+    let h = 0;
+
+    const totalPadding = this._options.padding * 2;
+    const childCount = this._children.length;
+    const totalSpacing = Math.max(childCount - 1, 0) * this._options.spacing;
+
+    let maxW = constraint.w - this._options.padding * 2;
+    let maxH = constraint.h - this._options.padding * 2 - totalSpacing;
+
+    for (let child of this._children) {
+      const childSize = child.getSize({ w: maxW, h: maxH });
+      w = Math.max(w, childSize.w);
+      h += childSize.h;
+    }
+
+    return { w: w + totalPadding, h: h + totalPadding + totalSpacing };
+  }
+
+  override setFrame(x: number, y: number, w: number, h: number): void {
+    super.setFrame(x, y, w, h);
+
+    const padding = this._options.padding;
+    let childY = y + padding;
+    let childW = w - padding * 2;
+
+    // TODO: The calculation here doesn't guarantee same results as in
+    // getSize(), so perhaps cache results of getSize for each child and
+    // re-apply here.
+    for (let child of this._children) {
+      const childSize = child.getSize({ w: childW, h });
+      child.setFrame(x + padding, childY, childW, childSize.h);
+      childY += this._options.spacing + childSize.h;
+    }
+  }
+
+  update(dt: number, input: InputState): void {
+    for (let child of this._children) {
+      child.update(dt, input);
+    }
+  }
+
+  draw(renderer: Renderer): void {
+    const { x, y, w, h } = this._frame;
+
+    renderer.drawRect(x, y, w, h, this._options.background);
+
+    for (let child of this._children) {
+      child.draw(renderer);
+    }
+  }
+}
+
 export const UI = {
+  /**
+   * Set a default style for all controls.
+   * @param style
+   */
+  setStyle(style: Style) {
+    defaultStyle = style;
+  },
+
+  /**
+   * Create a new layout. A layout is a required root component for any view.
+   * @returns
+   */
   layout(): Layout {
     return new Layout();
   },
 
+  /**
+   * Create a button.
+   * @param title
+   * @param options
+   * @returns
+   */
   button(title: string, options?: DeepPartial<ButtonOptions>): Button {
     return new Button(
       title,
       DeepPartial.merge(DEFAULT_BUTTON_OPTIONS, options || {})
+    );
+  },
+
+  /**
+   * Create a panel. A panel is a container with a background color or image.
+   * @param options
+   * @returns
+   */
+  panel(
+    children: Control[] | Control,
+    options?: DeepPartial<PanelOptions>
+  ): Panel {
+    return new Panel(
+      Array.isArray(children) ? children : [children],
+      DeepPartial.merge(DEFAULT_PANEL_OPTIONS, options || {})
     );
   },
 };
