@@ -44,15 +44,19 @@ export class TestSceen extends Scene {
 const mutedGray: Partial<ButtonStyle> = {
   font: "16px Arial",
   textColor: "#fff",
-  normalColor: "#444",
-  hoverColor: "#555",
-  activeColor: "#666",
+  background: {
+    normal: "#444",
+    hover: "#555",
+    active: "#666",
+  },
 };
 
 const blackPink: Partial<ButtonStyle> = {
   font: "16px Arial",
   textColor: "#000000",
-  normalColor: "#EBA9B4",
-  hoverColor: "#E38494",
-  activeColor: "#CC6B7C",
+  background: {
+    normal: "#EBA9B4",
+    hover: "#E38494",
+    active: "#CC6B7C",
+  },
 };

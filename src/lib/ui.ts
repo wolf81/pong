@@ -1,3 +1,4 @@
+import { DeepPartial } from "./deep_partial";
 import { InputListener } from "./input_listener";
 import { Renderer } from "./renderer";
 import { ServiceLocator } from "./service_locator";
@@ -9,23 +10,18 @@ type Frame = Pos & Size;
 export type ButtonStyle = {
   font: string;
   textColor: string;
-  normalColor: string;
-  hoverColor: string;
-  activeColor: string;
+  background: BackgroundStyle;
+};
+
+export type BackgroundStyle = {
+  normal: string;
+  hover: string;
+  active: string;
 };
 
 export type Style = {
   button: ButtonStyle;
 };
-
-const BUTTON_STYLE: ButtonStyle = {
-  font: "16px Arial",
-  textColor: "#ffffff",
-  normalColor: "#2979FF",
-  hoverColor: "#5393FF",
-  activeColor: "#1C54B2",
-};
-const BUTTON_SIZE: Size = { w: 100, h: 40 };
 
 type InputState = {
   mouse: { pos: Pos; button1: boolean; button2: boolean };
@@ -61,7 +57,21 @@ export type ControlOptions = {
 };
 
 export type ButtonOptions = ControlOptions & {
-  style: Partial<ButtonStyle>;
+  style: ButtonStyle;
+};
+
+const DEF_BUTTON_OPTIONS: ButtonOptions = {
+  minSize: { w: 100, h: 40 },
+  stretch: Stretch.none,
+  style: {
+    font: "16px Arial",
+    textColor: "#ffffff",
+    background: {
+      normal: "#2979FF",
+      hover: "#5393FF",
+      active: "#1C54B2",
+    },
+  },
 };
 
 export abstract class Control {
@@ -122,14 +132,14 @@ export abstract class Control {
 }
 
 export class Button extends Control {
-  private readonly _style: ButtonStyle;
+  private readonly _options: ButtonOptions;
 
   private _background: string = "#ccc";
 
-  constructor(minSize: Size, stretch: Stretch, style: ButtonStyle) {
-    super(minSize, stretch);
+  constructor(options: ButtonOptions) {
+    super(options.minSize, options.stretch);
 
-    this._style = style;
+    this._options = options;
   }
 
   draw(renderer: Renderer): void {
@@ -149,13 +159,15 @@ export class Button extends Control {
         : ControlState.Hover
       : ControlState.Normal;
 
-    this._background = this._style.normalColor;
+    const style = this._options.style;
+
+    this._background = style.background.normal!;
     switch (this._state) {
       case ControlState.Hover:
-        this._background = this._style.hoverColor;
+        this._background = style.background.hover!;
         break;
       case ControlState.Active:
-        this._background = this._style.activeColor;
+        this._background = style.background.active!;
         break;
     }
   }
@@ -259,17 +271,7 @@ export const UI = {
     return new Layout();
   },
 
-  button(options: Partial<ButtonOptions>): Button {
-    const minSize = options.minSize ?? BUTTON_SIZE;
-
-    let buttonStyle: ButtonStyle = {
-      textColor: options.style?.textColor ?? BUTTON_STYLE.textColor,
-      normalColor: options.style?.normalColor ?? BUTTON_STYLE.normalColor,
-      hoverColor: options.style?.hoverColor ?? BUTTON_STYLE.hoverColor,
-      activeColor: options.style?.activeColor ?? BUTTON_STYLE.activeColor,
-      font: options.style?.font ?? BUTTON_STYLE.font,
-    };
-
-    return new Button(minSize, Stretch.none, buttonStyle);
+  button(options: DeepPartial<ButtonOptions>): Button {
+    return new Button(DeepPartial.merge(DEF_BUTTON_OPTIONS, options));
   },
 };
