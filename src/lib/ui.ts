@@ -1,8 +1,21 @@
+import { InputListener } from "./input_listener";
 import { Renderer } from "./renderer";
+import { ServiceLocator } from "./service_locator";
 
 type Pos = { x: number; y: number };
 type Size = { w: number; h: number };
 type Frame = Pos & Size;
+
+type InputState = {
+  mouse: { pos: Pos; button1: boolean; button2: boolean };
+};
+
+enum ControlState {
+  Normal,
+  Hover,
+  Active,
+  Disabled,
+}
 
 type Anchor =
   | "top-left"
@@ -28,12 +41,31 @@ export type ControlOptions = {
 };
 
 export type ButtonOptions = ControlOptions & {
-  background: string;
+  background: Partial<Record<ControlState, string>>;
 };
 
 export abstract class Control {
   private _minSize: Size;
   private _stretch: Stretch;
+  private _enabled: boolean = true;
+
+  get enabled(): boolean {
+    return this._enabled;
+  }
+
+  set enabled(isEnabled: boolean) {
+    this._enabled = isEnabled;
+
+    if (!this._enabled) {
+      this._state = ControlState.Disabled;
+    }
+  }
+
+  protected _state: ControlState = ControlState.Normal;
+
+  get state(): ControlState {
+    return this._state;
+  }
 
   protected _frame: Frame = { x: 0, y: 0, w: 0, h: 0 };
 
@@ -48,11 +80,15 @@ export abstract class Control {
 
   abstract draw(renderer: Renderer): void;
 
+  abstract update(dt: number, input: InputState): void;
+
   hitTest(x: number, y: number): Control | undefined {
+    if (!this._enabled) return undefined;
+
     const isHit =
       x >= this._frame.x &&
       x < this._frame.x + this._frame.w &&
-      y >= this._frame.h &&
+      y >= this._frame.y &&
       y < this._frame.y + this._frame.h;
 
     return isHit ? this : undefined;
@@ -77,9 +113,7 @@ export abstract class Control {
 }
 
 export class Button extends Control {
-  private _color: string = "#fff";
-
-  private _options: ButtonOptions;
+  private readonly _options: ButtonOptions;
 
   constructor(options: ButtonOptions) {
     super(options.minSize, options.stretch);
@@ -89,7 +123,21 @@ export class Button extends Control {
 
   draw(renderer: Renderer): void {
     const { x, y, w, h } = this._frame;
-    renderer.drawRect(x, y, w, h, this._color);
+
+    const background = this._options.background[this.state]!;
+    renderer.drawRect(x, y, w, h, background);
+  }
+
+  update(dt: number, input: InputState): void {
+    const { x, y } = input.mouse.pos;
+
+    const isHit = this.hitTest(x, y) === this;
+
+    this._state = isHit
+      ? input.mouse.button1
+        ? ControlState.Active
+        : ControlState.Hover
+      : ControlState.Normal;
   }
 }
 
@@ -99,70 +147,85 @@ type ControlInfo = {
 };
 
 export class Layout {
-  private _children: Map<Control, ControlInfo> = new Map<
+  private readonly _inputListener: InputListener;
+
+  private readonly _children: Map<Control, ControlInfo> = new Map<
     Control,
     ControlInfo
   >();
+
   private _size: Size = { w: 0, h: 0 };
+
+  constructor() {
+    this._inputListener = ServiceLocator.resolve(InputListener);
+  }
 
   addChild(
     control: Control,
-    x: number,
-    y: number,
+    pos: { x: number; y: number },
     anchor: Anchor = "top-left"
   ) {
-    this._children.set(control, { pos: { x: x, y: y }, anchor: anchor });
+    this._children.set(control, { pos: pos, anchor: anchor });
   }
 
   resize(w: number, h: number) {
     this._size = { w, h };
 
     for (let [child, info] of this._children) {
+      const { w, h } = child.getSize(this._size);
       let { x, y } = info.pos;
-      if (x <= 1.0) {
-        x = Math.floor(info.pos.x * w);
-      }
-      if (y <= 1.0) {
-        y = Math.floor(info.pos.y * h);
-      }
-      const childSize = child.getSize(this._size);
 
       switch (info.anchor) {
         case "top":
-          x -= Math.floor(childSize.w / 2);
+          x -= Math.floor(w / 2);
           break;
         case "left":
-          y -= Math.floor(childSize.h / 2);
+          y -= Math.floor(h / 2);
           break;
         case "right":
-          x -= childSize.w;
-          y -= Math.floor(childSize.h / 2);
+          x -= w;
+          y -= Math.floor(h / 2);
           break;
         case "bottom":
-          x -= Math.floor(childSize.w / 2);
-          y -= childSize.h;
+          x -= Math.floor(w / 2);
+          y -= h;
           break;
         case "top-right":
-          x -= childSize.w;
+          x -= w;
           break;
         case "center":
-          x -= Math.floor(childSize.w / 2);
-          y -= Math.floor(childSize.h / 2);
+          x -= Math.floor(w / 2);
+          y -= Math.floor(h / 2);
           break;
         case "bottom-left":
-          y -= childSize.h;
+          y -= h;
           break;
         case "bottom-right":
-          x -= childSize.w;
-          y -= childSize.h;
+          x -= w;
+          y -= h;
           break;
       }
 
-      child.setFrame(x, y, childSize.w, childSize.h);
+      child.setFrame(x, y, w, h);
     }
   }
 
-  update(dt: number) {}
+  update(dt: number) {
+    let { x, y } = this._inputListener.getMousePosition();
+
+    if (x < 0 || x >= this._size.w || y < 0 || y >= this._size.h) {
+      x = -1;
+      y = -1;
+    }
+
+    for (let [child, _] of this._children) {
+      const input: InputState = {
+        mouse: { pos: { x, y }, button1: false, button2: false },
+      };
+
+      child.update(dt, input);
+    }
+  }
 
   draw(renderer: Renderer) {
     for (let [child, _] of this._children) {
@@ -180,7 +243,18 @@ export const UI = {
     const w = options.minSize?.w ?? 100;
     const h = options.minSize?.h ?? 40;
 
-    const background = options.background ?? "#ccc";
+    const normalBackgroundColor =
+      options.background?.[ControlState.Normal] || "#ccc";
+
+    const background: Record<ControlState, string> = {
+      [ControlState.Normal]: normalBackgroundColor,
+      [ControlState.Hover]:
+        options.background?.[ControlState.Hover] || normalBackgroundColor,
+      [ControlState.Active]:
+        options.background?.[ControlState.Hover] || normalBackgroundColor,
+      [ControlState.Disabled]:
+        options.background?.[ControlState.Hover] || normalBackgroundColor,
+    };
 
     return new Button({
       minSize: { w, h },
