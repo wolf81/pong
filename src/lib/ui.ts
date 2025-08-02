@@ -9,8 +9,14 @@ type Pos = { x: number; y: number };
 type Size = { w: number; h: number };
 type Frame = Pos & Size;
 
+export type ButtonOptions = {
+  enabled: () => boolean;
+  click: () => void;
+};
+
 export type ButtonStyle = {
   font: string;
+  minSize: Size;
   textColor: string;
   background: {
     normal: string;
@@ -37,6 +43,7 @@ export type Style = {
 
 let defaultStyle: Style = {
   button: {
+    minSize: { w: 100, h: 40 },
     font: "16px Arial",
     textColor: "#ffffff",
     background: {
@@ -79,19 +86,20 @@ export enum Stretch {
   all = 1,
 }
 
-export type ButtonOptions = {
-  style: ButtonStyle;
-  minSize: Size;
-  enabled: () => boolean;
-  click: () => void;
+export type ButtonConfig = {
+  options?: DeepPartial<ButtonOptions>;
+  style?: DeepPartial<ButtonStyle>;
 };
 
 const DEFAULT_BUTTON_OPTIONS: ButtonOptions = {
-  style: defaultStyle.button,
-  minSize: { w: 100, h: 40 },
   enabled: () => true,
   click: () => {},
 };
+
+// const DEFAULT_BUTTON_STYLE: ButtonOptions = {
+//   style: defaultStyle.button,
+//   minSize: { w: 100, h: 40 },
+// };
 
 export type LabelOptions = {
   style: LabelStyle;
@@ -160,17 +168,19 @@ export abstract class Control {
 
 export class Button extends Control {
   private readonly _options: ButtonOptions;
+  private readonly _style: ButtonStyle;
 
   private readonly _title: string;
 
   private _content!: HTMLCanvasElement;
   private _wasHit: boolean = false;
 
-  constructor(title: string, options: ButtonOptions) {
+  constructor(title: string, options: ButtonOptions, style: ButtonStyle) {
     super();
 
     this._title = title;
     this._options = options;
+    this._style = style;
   }
 
   override setFrame(x: number, y: number, w: number, h: number): void {
@@ -214,8 +224,7 @@ export class Button extends Control {
 
   private updateContent() {
     const { w, h } = this._frame;
-    const { style } = this._options;
-    const bg = style.background[this._state];
+    const bg = this._style.background[this._state];
     const title = this._title;
 
     this._content = TextureHelper.generate(w, h, (ctx) => {
@@ -230,8 +239,8 @@ export class Button extends Control {
         ctx.drawImage(image, 0, 0);
       }
 
-      ctx.font = style.font;
-      ctx.fillStyle = style.textColor;
+      ctx.font = this._style.font;
+      ctx.fillStyle = this._style.textColor;
 
       const metrics = ctx.measureText("Mg");
       const textH =
@@ -247,13 +256,15 @@ export class Button extends Control {
   }
 
   override measure(): Size {
-    return this._options.minSize;
+    return this._style.minSize;
   }
 }
 
 type ControlInfo = {
   pos: Pos;
   anchor: Anchor;
+  minSize: Size;
+  stretch: Stretch;
 };
 
 export class Label extends Control {
@@ -318,6 +329,8 @@ export class Layout {
     this._children.set(control, {
       pos: pos,
       anchor: options.anchor || "top-left",
+      minSize: options.minSize || { w: 0, h: 0 },
+      stretch: options.stretch || Stretch.none,
     });
   }
 
@@ -325,8 +338,30 @@ export class Layout {
     this._size = { w, h };
 
     for (let [child, info] of this._children) {
-      const { w, h } = child.measure();
+      let { w, h } = child.measure();
       let { x, y } = info.pos;
+
+      w = Math.min(w, this._size.w);
+      h = Math.min(h, this._size.h);
+
+      // const stretchH = (info.stretch & Stretch.horz) !== 0;
+      // const stretchV = (info.stretch & Stretch.vert) !== 0;
+
+      // if (w < this._size.w && stretchH) {
+      //   w = this._size.w;
+      // }
+
+      // if (w > info.minSize.w && !stretchH) {
+      //   h = info.minSize.w;
+      // }
+
+      // if (h < this._size.h && stretchV) {
+      //   h = this._size.h;
+      // }
+
+      // if (h > info.minSize.h && !stretchV) {
+      //   h = info.minSize.h;
+      // }
 
       switch (info.anchor) {
         case "top":
@@ -499,10 +534,11 @@ export const UI = {
    * @param options
    * @returns
    */
-  button(title: string, options?: DeepPartial<ButtonOptions>): Button {
+  button(title: string, config: ButtonConfig = {}): Button {
     return new Button(
       title,
-      DeepPartial.merge(DEFAULT_BUTTON_OPTIONS, options || {})
+      DeepPartial.merge(DEFAULT_BUTTON_OPTIONS, config.options || {}),
+      DeepPartial.merge(defaultStyle.button, config.style || {})
     );
   },
 
