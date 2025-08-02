@@ -1,4 +1,5 @@
 import { TextureHelper } from "../helpers/texture_helper";
+import { AssetLoader } from "./asset_loader";
 import { DeepPartial } from "./deep_partial";
 import { InputListener } from "./input_listener";
 import { Renderer } from "./renderer";
@@ -7,6 +8,8 @@ import { ServiceLocator } from "./service_locator";
 type Pos = { x: number; y: number };
 type Size = { w: number; h: number };
 type Frame = Pos & Size;
+
+type Drawable = HTMLImageElement | HTMLCanvasElement;
 
 export type ButtonStyle = {
   font: string;
@@ -38,11 +41,7 @@ type InputState = {
   mouse: { pos: Pos; button1: boolean; button2: boolean };
 };
 
-enum ControlState {
-  Normal,
-  Hover,
-  Active,
-}
+type ControlState = "normal" | "hover" | "active";
 
 type Anchor =
   | "top-left"
@@ -100,7 +99,7 @@ export abstract class Control {
   private _stretch: Stretch;
 
   protected _enabled: boolean = true;
-  protected _state: ControlState = ControlState.Normal;
+  protected _state: ControlState = "normal";
 
   get enabled(): boolean {
     return this._enabled;
@@ -183,12 +182,8 @@ export class Button extends Control {
     const isHit = isHover && input.mouse.button1;
 
     const enabled = this._options.enabled();
-    let state: ControlState = ControlState.Normal;
-    state = isHit
-      ? ControlState.Active
-      : isHover
-      ? ControlState.Hover
-      : ControlState.Normal;
+    let state: ControlState = "normal";
+    state = isHit ? "active" : isHover ? "hover" : "normal";
 
     const isRelease = this._wasHit && isHover && !input.mouse.button1;
     this._wasHit = isHover && input.mouse.button1;
@@ -215,38 +210,33 @@ export class Button extends Control {
 
   private updateContent() {
     const { w, h } = this._frame;
+    const { style } = this._options;
+    const bg = style.background[this._state];
+    const title = this._title;
+
     this._content = TextureHelper.generate(w, h, (ctx) => {
       ctx.save();
+      if (!this.enabled) ctx.globalAlpha = 0.5;
 
-      if (!this.enabled) {
-        ctx.globalAlpha = 0.5;
+      if (isColorString(bg)) {
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+      } else {
+        const image = TextureHelper.stretch(getImage(bg), w, h, 10);
+        ctx.drawImage(image, 0, 0);
       }
 
-      switch (this._state) {
-        case ControlState.Active:
-          ctx.fillStyle = this._options.style.background.active;
-          break;
-        case ControlState.Hover:
-          ctx.fillStyle = this._options.style.background.hover;
-          break;
-        case ControlState.Normal:
-          ctx.fillStyle = this._options.style.background.normal;
-          break;
-      }
-      ctx.fillRect(0, 0, w, h);
+      ctx.font = style.font;
+      ctx.fillStyle = style.textColor;
 
-      ctx.font = this._options.style.font;
-      const heightMetrics = ctx.measureText("Mg");
-      // For text height use a consistent height regardless of letters in text.
+      const metrics = ctx.measureText("Mg");
       const textH =
-        heightMetrics.actualBoundingBoxAscent +
-        heightMetrics.actualBoundingBoxDescent;
-      const textW = ctx.measureText(this._title).width;
+        metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+      const textW = ctx.measureText(title).width;
 
-      ctx.fillStyle = this._options.style.textColor;
       const textX = Math.floor((w - textW) / 2);
       const textY = Math.floor((h + textH) / 2);
-      ctx.fillText(this._title, textX, textY);
+      ctx.fillText(title, textX, textY);
 
       ctx.restore();
     });
@@ -467,4 +457,11 @@ export const UI = {
 
 function isColorString(text: string): boolean {
   return text.startsWith("#") || text.startsWith("rgb(");
+}
+
+function getImage(name: string): HTMLImageElement {
+  const assetLoader = ServiceLocator.resolve(AssetLoader);
+  const image = assetLoader.getImage(name);
+  // TODO: Assert ...
+  return image;
 }
