@@ -1,4 +1,4 @@
-import { ButtonOptions, ButtonStyle, Layout, UI } from "../lib/ui";
+import { ButtonStyle, Layout, UI } from "../lib/ui";
 import { Renderer } from "../lib/renderer";
 import { Scene } from "../lib/scene_manager";
 import { CANVAS_H, CANVAS_W } from "../constants";
@@ -11,24 +11,29 @@ export class TestSceen extends Scene {
   constructor() {
     super();
 
-    const button1 = UI.button("Who am I?", {
-      style: mutedGray,
-      enabled: () => false,
-    });
-
-    const button2 = UI.button("Play", {
+    const button1 = UI.button("Start", {
       minSize: { w: 100, h: 100 },
       style: blackPink,
       enabled: () => this._blackPinkEnabled,
     });
 
-    const button3 = UI.button("Herro World!", {
+    const button2 = UI.button("Settings", {
       minSize: { w: 192, h: 64 },
       style: menuButtonStyle,
       click: () => (this._blackPinkEnabled = !this._blackPinkEnabled),
     });
 
-    const panel = UI.panel([button1, button2, button3]);
+    const button3 = UI.button("Quit", {
+      minSize: { w: 300 - 32, h: 64 },
+      style: menuButtonStyle,
+      click: () => (this._blackPinkEnabled = !this._blackPinkEnabled),
+    });
+
+    const panel = UI.panel([button1, button2, button3], {
+      background: "button_square_border",
+      padding: 16,
+      spacing: 16,
+    });
 
     this._ui.addChild(panel, { x: CANVAS_W / 2, y: CANVAS_H / 2 }, "center");
     this._ui.resize(CANVAS_W, CANVAS_H);
