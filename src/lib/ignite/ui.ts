@@ -1,13 +1,15 @@
-import { TextureHelper } from "../helpers/texture_helper";
+import { Assert } from "./assert";
 import { AssetLoader } from "./asset_loader";
 import { DeepPartial } from "./deep_partial";
 import { InputListener } from "./input_listener";
+import { TextureHelper } from "./internal/texture_helper";
 import { Renderer } from "./renderer";
 import { ServiceLocator } from "./service_locator";
 
 type Pos = { x: number; y: number };
 type Size = { w: number; h: number };
 type Frame = Pos & Size;
+type SizeSpec = number | "fill" | "wrap";
 
 export type ButtonOptions = {
   enabled: () => boolean;
@@ -33,6 +35,8 @@ export type LabelStyle = {
 
 export type PanelStyle = {
   background: string;
+  padding: number;
+  spacing: number;
 };
 
 export type Style = {
@@ -54,6 +58,8 @@ let defaultStyle: Style = {
   },
   panel: {
     background: "#6767cc",
+    padding: 10,
+    spacing: 10,
   },
   label: {
     padding: 8,
@@ -91,9 +97,34 @@ export type ButtonConfig = {
   style?: DeepPartial<ButtonStyle>;
 };
 
+export type PanelConfig = {
+  options?: DeepPartial<PanelOptions>;
+  style?: DeepPartial<PanelStyle>;
+};
+
+export type LabelConfig = {
+  options?: DeepPartial<LabelOptions>;
+  style?: DeepPartial<LabelStyle>;
+};
+
 const DEFAULT_BUTTON_OPTIONS: ButtonOptions = {
   enabled: () => true,
   click: () => {},
+};
+
+// TODO: Should probably be part of Panel and Button style options.
+const IMAGE_CORNER_RADIUS = 10;
+
+const ANCHOR_OFFSETS: Record<Anchor, (w: number, h: number) => Pos> = {
+  "top-left": () => ({ x: 0, y: 0 }),
+  top: (w, h) => ({ x: -w / 2, y: 0 }),
+  "top-right": (w) => ({ x: -w, y: 0 }),
+  left: (w, h) => ({ x: 0, y: -h / 2 }),
+  center: (w, h) => ({ x: -w / 2, y: -h / 2 }),
+  right: (w, h) => ({ x: -w, y: -h / 2 }),
+  "bottom-left": (w, h) => ({ x: 0, y: -h }),
+  bottom: (w, h) => ({ x: -w / 2, y: -h }),
+  "bottom-right": (w, h) => ({ x: -w, y: -h }),
 };
 
 // const DEFAULT_BUTTON_STYLE: ButtonOptions = {
@@ -102,30 +133,24 @@ const DEFAULT_BUTTON_OPTIONS: ButtonOptions = {
 // };
 
 export type LabelOptions = {
-  style: LabelStyle;
   align: "left" | "center" | "right";
 };
 
 const DEFAULT_LABEL_OPTIONS: LabelOptions = {
-  style: defaultStyle.label,
   align: "left",
 };
 
 export type PanelOptions = {
-  background: string; // image or color
-  padding: number;
-  spacing: number;
+  style: PanelStyle;
 };
 
 const DEFAULT_PANEL_OPTIONS: PanelOptions = {
-  padding: 10,
-  spacing: 10,
-  background: "#aaaaaa",
+  style: defaultStyle.panel,
+  // TODO: Support both horz / vert orientation.
 };
 
 export type LayoutOptions = {
-  minSize: Size;
-  stretch: Stretch;
+  size: { w: SizeSpec; h: SizeSpec };
   anchor: Anchor;
 };
 
@@ -224,20 +249,14 @@ export class Button extends Control {
 
   private updateContent() {
     const { w, h } = this._frame;
-    const bg = this._style.background[this._state];
+    const background = this._style.background[this._state];
     const title = this._title;
 
     this._content = TextureHelper.generate(w, h, (ctx) => {
       ctx.save();
       if (!this.enabled) ctx.globalAlpha = 0.5;
 
-      if (isColorString(bg)) {
-        ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, w, h);
-      } else {
-        const image = TextureHelper.stretch(getImage(bg), w, h, 10);
-        ctx.drawImage(image, 0, 0);
-      }
+      drawBackground(ctx, background, w, h);
 
       ctx.font = this._style.font;
       ctx.fillStyle = this._style.textColor;
@@ -262,29 +281,30 @@ export class Button extends Control {
 
 type ControlInfo = {
   pos: Pos;
+  size: { w: SizeSpec; h: SizeSpec };
   anchor: Anchor;
-  minSize: Size;
-  stretch: Stretch;
 };
 
 export class Label extends Control {
   private _text: string;
   private readonly _options: LabelOptions;
+  private readonly _style: LabelStyle;
 
-  constructor(text: string, options: LabelOptions) {
+  constructor(text: string, options: LabelOptions, style: LabelStyle) {
     super();
 
     this._text = text;
     this._options = options;
+    this._style = style;
   }
 
   override measure(): Size {
     const canvas = document.createElement("canvas")!;
     const ctx = canvas.getContext("2d")!;
-    ctx.font = this._options.style.font;
+    ctx.font = this._style.font;
     const heightMetrics = ctx.measureText("Mg");
 
-    const totalPadding = this._options.style.padding * 2;
+    const totalPadding = this._style.padding * 2;
 
     const w = ctx.measureText(this._text).width + totalPadding;
     const h =
@@ -300,8 +320,8 @@ export class Label extends Control {
   draw(renderer: Renderer): void {
     const { x, y, w, h } = this._frame;
     renderer.drawText(this._text, x + w / 2, y + h / 2, {
-      font: this._options.style.font,
-      color: this._options.style.textColor,
+      font: this._style.font,
+      color: this._style.textColor,
       align: this._options.align,
     });
   }
@@ -329,8 +349,7 @@ export class Layout {
     this._children.set(control, {
       pos: pos,
       anchor: options.anchor || "top-left",
-      minSize: options.minSize || { w: 0, h: 0 },
-      stretch: options.stretch || Stretch.none,
+      size: options.size || { w: "wrap", h: "wrap" },
     });
   }
 
@@ -341,60 +360,36 @@ export class Layout {
       let { w, h } = child.measure();
       let { x, y } = info.pos;
 
-      w = Math.min(w, this._size.w);
-      h = Math.min(h, this._size.h);
-
-      // const stretchH = (info.stretch & Stretch.horz) !== 0;
-      // const stretchV = (info.stretch & Stretch.vert) !== 0;
-
-      // if (w < this._size.w && stretchH) {
-      //   w = this._size.w;
-      // }
-
-      // if (w > info.minSize.w && !stretchH) {
-      //   h = info.minSize.w;
-      // }
-
-      // if (h < this._size.h && stretchV) {
-      //   h = this._size.h;
-      // }
-
-      // if (h > info.minSize.h && !stretchV) {
-      //   h = info.minSize.h;
-      // }
-
-      switch (info.anchor) {
-        case "top":
-          x -= Math.floor(w / 2);
+      switch (info.size.w) {
+        case "fill":
+          w = this._size.w;
           break;
-        case "left":
-          y -= Math.floor(h / 2);
+        case "wrap":
           break;
-        case "right":
-          x -= w;
-          y -= Math.floor(h / 2);
-          break;
-        case "bottom":
-          x -= Math.floor(w / 2);
-          y -= h;
-          break;
-        case "top-right":
-          x -= w;
-          break;
-        case "center":
-          x -= Math.floor(w / 2);
-          y -= Math.floor(h / 2);
-          break;
-        case "bottom-left":
-          y -= h;
-          break;
-        case "bottom-right":
-          x -= w;
-          y -= h;
+        default:
+          w = Math.min(info.size.w, this._size.w);
           break;
       }
 
-      child.setFrame(x, y, w, h);
+      switch (info.size.h) {
+        case "fill":
+          h = this._size.h;
+          break;
+        case "wrap":
+          break;
+        default:
+          h = Math.min(info.size.h, this._size.h);
+          break;
+      }
+
+      const offset = ANCHOR_OFFSETS[info.anchor](w, h);
+
+      child.setFrame(
+        Math.floor(x + offset.x),
+        Math.floor(y + offset.y),
+        Math.floor(w),
+        Math.floor(h)
+      );
     }
   }
 
@@ -432,23 +427,26 @@ export class Layout {
 
 export class Panel extends Control {
   private _background!: HTMLCanvasElement;
-  private _options: PanelOptions;
-  private _children: Control[];
 
-  constructor(children: Control[], options: PanelOptions) {
+  private readonly _children: Control[];
+  private readonly _options: PanelOptions;
+  private readonly _style: PanelStyle;
+
+  constructor(children: Control[], options: PanelOptions, style: PanelStyle) {
     super();
 
     this._children = children;
     this._options = options;
+    this._style = style;
   }
 
   override measure(): Size {
     let w = 0;
     let h = 0;
 
-    const totalPadding = this._options.padding * 2;
+    const totalPadding = this._style.padding * 2;
     const childCount = this._children.length;
-    const totalSpacing = Math.max(childCount - 1, 0) * this._options.spacing;
+    const totalSpacing = Math.max(childCount - 1, 0) * this._style.spacing;
 
     for (let child of this._children) {
       const childSize = child.measure();
@@ -462,7 +460,7 @@ export class Panel extends Control {
   override setFrame(x: number, y: number, w: number, h: number): void {
     super.setFrame(x, y, w, h);
 
-    const padding = this._options.padding;
+    const padding = this._style.padding;
     let childY = y + padding;
     let childW = w - padding * 2;
 
@@ -472,18 +470,11 @@ export class Panel extends Control {
     for (let child of this._children) {
       const childSize = child.measure();
       child.setFrame(x + padding, childY, childW, childSize.h);
-      childY += this._options.spacing + childSize.h;
+      childY += this._style.spacing + childSize.h;
     }
 
     this._background = TextureHelper.generate(w, h, (ctx) => {
-      const bg = this._options.background;
-      if (isColorString(bg)) {
-        ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, w, h);
-      } else {
-        const image = TextureHelper.stretch(getImage(bg), w, h, 10);
-        ctx.drawImage(image, 0, 0);
-      }
+      drawBackground(ctx, this._style.background, w, h);
     });
   }
 
@@ -521,10 +512,11 @@ export const UI = {
     return new Layout();
   },
 
-  label(text: string, options?: DeepPartial<LabelOptions>): Label {
+  label(text: string, config: LabelConfig = {}): Label {
     return new Label(
       text,
-      DeepPartial.merge(DEFAULT_LABEL_OPTIONS, options || {})
+      DeepPartial.merge(DEFAULT_LABEL_OPTIONS, config.options || {}),
+      DeepPartial.merge(defaultStyle.label, config.style || {})
     );
   },
 
@@ -544,16 +536,14 @@ export const UI = {
 
   /**
    * Create a panel. A panel is a container with a background color or image.
-   * @param options
+   * @param config
    * @returns
    */
-  panel(
-    children: Control[] | Control,
-    options?: DeepPartial<PanelOptions>
-  ): Panel {
+  panel(children: Control[] | Control, config: PanelConfig = {}): Panel {
     return new Panel(
       Array.isArray(children) ? children : [children],
-      DeepPartial.merge(DEFAULT_PANEL_OPTIONS, options || {})
+      DeepPartial.merge(DEFAULT_PANEL_OPTIONS, config.options || {}),
+      DeepPartial.merge(defaultStyle.panel, config.style || {})
     );
   },
 };
@@ -565,6 +555,26 @@ function isColorString(text: string): boolean {
 function getImage(name: string): HTMLImageElement {
   const assetLoader = ServiceLocator.resolve(AssetLoader);
   const image = assetLoader.getImage(name);
-  // TODO: Assert ...
+  Assert.defined(image, `No image asset found with name: ${name}`);
   return image;
+}
+
+function drawBackground(
+  ctx: CanvasRenderingContext2D,
+  drawable: string,
+  w: number,
+  h: number
+) {
+  if (isColorString(drawable)) {
+    ctx.fillStyle = drawable;
+    ctx.fillRect(0, 0, w, h);
+  } else {
+    const image = TextureHelper.stretch(
+      getImage(drawable),
+      w,
+      h,
+      IMAGE_CORNER_RADIUS
+    );
+    ctx.drawImage(image, 0, 0);
+  }
 }

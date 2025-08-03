@@ -47,7 +47,6 @@ export class Game {
     this._inputListener.update();
 
     Timer.update(dt);
-    UI.update();
   }
 
   draw(renderer: Renderer) {

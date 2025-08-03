@@ -9,6 +9,8 @@ import {
 } from "../lib/ignite";
 import { Player } from "./types";
 
+type Size = { w: number; h: number };
+
 /**
  * Base speed for both paddle & ball in pixels per second.
  */

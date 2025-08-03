@@ -70,14 +70,33 @@ export class MainMenuScene extends Scene {
   }
 
   update(dt: number): void {
-    for (let widget of this._layout.widgets()) {
-      widget.update(dt);
-    }
+    this._layout.update(dt);
   }
 
   draw(renderer: Renderer): void {
-    for (let widget of this._layout.widgets()) {
-      widget.draw(renderer);
-    }
+    this._layout.draw(renderer);
   }
 }
+
+const uiStyle: Style = {
+  button: {
+    font: "32px Jumpman",
+    minSize: { w: 192, h: 64 },
+    textColor: "#ffffff",
+    background: {
+      normal: "button_square_depth_flat",
+      hover: "button_square_depth_gloss",
+      active: "button_square_gloss",
+    },
+  },
+  label: {
+    font: "40px Jumpman",
+    padding: 10,
+    textColor: "#ee2747",
+  },
+  panel: {
+    padding: 16,
+    spacing: 16,
+    background: "button_square_border",
+  },
+};
