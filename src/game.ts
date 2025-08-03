@@ -1,5 +1,4 @@
 import { Settings } from "./settings";
-import { UI } from "./core/ui";
 import { LoadingScene } from "./scenes/loading_scene";
 import {
   SceneManager,
@@ -28,8 +27,6 @@ export class Game {
 
     this._assetLoader = new AssetLoader();
     ServiceLocator.register(AssetLoader, this._assetLoader);
-
-    UI.init(canvas);
   }
 
   async init(): Promise<void> {

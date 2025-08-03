@@ -30,6 +30,7 @@ export type ButtonStyle = {
 export type LabelStyle = {
   font: string;
   textColor: string;
+  align: "center" | "left" | "right";
   padding: number;
 };
 
@@ -62,6 +63,7 @@ let defaultStyle: Style = {
     spacing: 10,
   },
   label: {
+    align: "left",
     padding: 8,
     font: "16px Arial",
     textColor: "#333333",
@@ -132,13 +134,9 @@ const ANCHOR_OFFSETS: Record<Anchor, (w: number, h: number) => Pos> = {
 //   minSize: { w: 100, h: 40 },
 // };
 
-export type LabelOptions = {
-  align: "left" | "center" | "right";
-};
+export type LabelOptions = {};
 
-const DEFAULT_LABEL_OPTIONS: LabelOptions = {
-  align: "left",
-};
+const DEFAULT_LABEL_OPTIONS: LabelOptions = {};
 
 export type PanelOptions = {
   style: PanelStyle;
@@ -322,7 +320,7 @@ export class Label extends Control {
     renderer.drawText(this._text, x + w / 2, y + h / 2, {
       font: this._style.font,
       color: this._style.textColor,
-      align: this._options.align,
+      align: this._style.align,
     });
   }
 }

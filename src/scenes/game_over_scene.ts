@@ -1,15 +1,8 @@
 import { CANVAS_H, CANVAS_W } from "../constants";
 import { Player } from "../core/types";
-import { Control, UI } from "../core/ui";
 import { AudioHelper } from "../helpers/audio_helper";
-import {
-  ServiceLocator,
-  SceneManager,
-  Layout,
-  Tidy,
-  Scene,
-  Renderer,
-} from "../lib/ignite";
+import { ServiceLocator, SceneManager, Scene, Renderer } from "../lib/ignite";
+import { Layout, UI } from "../lib/ignite/ui";
 import { MainMenuScene } from "./main_menu_scene";
 
 function showMainMenu() {
@@ -19,57 +12,40 @@ function showMainMenu() {
   sceneManager.push(new MainMenuScene());
 }
 
-function makeLayout(winner: Player): Layout<Control> {
-  return Tidy.border([
-    UI.panel(),
-    Tidy.border(
-      [
-        Tidy.vstack<Control>(
-          [
-            UI.label("Game Over", { size: 26, textColor: "#ee2747" }),
-            UI.label(winner === Player.One ? "You Win!" : "You Lose!", {
-              size: 40,
-              textColor: "#ee2747",
-            }),
-            UI.button("Menu", { size: 32, onClick: () => showMainMenu() }),
-          ],
-          { spacing: 20 }
-        ),
-      ],
-      {
-        margin: Tidy.margin(16, 16, 16, 16),
-      }
-    ),
-  ]);
-}
-
 export class GameOverScene extends Scene {
-  private _layout: Layout<Control> = Tidy.border([]);
+  private _layout: Layout;
   private _winner: Player;
 
   constructor(winner: Player) {
     super();
 
     this._winner = winner;
-    this._layout = makeLayout(winner);
 
-    const w = 300;
-    const h = 26 + 40 + 64 + 20 * 2 + 32;
-    const x = (CANVAS_W - w) / 2;
-    const y = (CANVAS_H - h) / 2;
-    this._layout.reshape(x, y, w, h);
+    this._layout = UI.layout();
+
+    const label1 = UI.label("Game Over");
+    const label2 = UI.label(winner === Player.One ? "You Win!" : "You Lose!");
+    const button = UI.button("Menu", {
+      options: { click: () => showMainMenu() },
+    });
+
+    const panel = UI.panel([label1, label2, button]);
+
+    this._layout.addChild(
+      panel,
+      { x: CANVAS_W / 2, y: CANVAS_H / 2 },
+      { anchor: "center", size: { w: 300, h: "wrap" } }
+    );
+
+    this._layout.resize(CANVAS_W, CANVAS_H);
   }
 
   update(dt: number): void {
-    for (let widget of this._layout.widgets()) {
-      widget.update(dt);
-    }
+    this._layout.update(dt);
   }
 
   draw(renderer: Renderer): void {
-    for (let widget of this._layout.widgets()) {
-      widget.draw(renderer);
-    }
+    this._layout.draw(renderer);
   }
 
   override async init(): Promise<void> {

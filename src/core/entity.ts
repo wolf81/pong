@@ -1,12 +1,4 @@
-import {
-  vector,
-  Vector,
-  Renderer,
-  Runloop,
-  Shape,
-  Rect,
-  Circle,
-} from "../lib/ignite";
+import { Vector, Renderer, Runloop, Shape, Rect, Circle } from "../lib/ignite";
 import { Player } from "./types";
 
 type Size = { w: number; h: number };
@@ -17,19 +9,19 @@ type Size = { w: number; h: number };
 const BASE_SPEED = 60;
 
 export abstract class Entity {
-  protected _prevPos: vector;
+  protected _prevPos: Vector;
 
-  get prevPos(): vector {
+  get prevPos(): Vector {
     return this._prevPos;
   }
 
   readonly sprite: HTMLImageElement;
 
-  pos: vector = { x: 0, y: 0 };
+  pos: Vector = { x: 0, y: 0 };
   size: { w: number; h: number };
   isVisible: boolean = true;
 
-  constructor(texture: HTMLImageElement, pos?: vector) {
+  constructor(texture: HTMLImageElement, pos?: Vector) {
     this.sprite = texture;
 
     this.pos = pos ?? { x: 0, y: 0 };
@@ -50,7 +42,7 @@ export abstract class Entity {
 }
 
 export abstract class Actor<T extends Shape> extends Entity {
-  dir: vector = Vector.zero;
+  dir: Vector = Vector.zero;
   speed: number = 8;
 
   abstract get shape(): T;
@@ -80,7 +72,7 @@ export class Paddle extends Actor<Rect> {
 
   score: number = 0;
 
-  constructor(texture: HTMLImageElement, pos: vector, player: Player) {
+  constructor(texture: HTMLImageElement, pos: Vector, player: Player) {
     super(texture, pos);
 
     this.player = player;
@@ -97,7 +89,7 @@ export class Ball extends Actor<Circle> {
     return this._shape;
   }
 
-  constructor(texture: HTMLImageElement, pos: vector) {
+  constructor(texture: HTMLImageElement, pos: Vector) {
     super(texture, pos);
 
     const radius = this.sprite.width / 2;

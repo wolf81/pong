@@ -161,10 +161,6 @@ export class GamePlayScene extends Scene {
     Timer.removeAllTimers();
   }
 
-  override deinit(): void {
-    Timer.removeAllTimers();
-  }
-
   update(dt: number): void {
     if (this._state === GamePlayState.StartMatch) return;
 
@@ -245,45 +241,6 @@ export class GamePlayScene extends Scene {
     this._player1.draw(renderer);
     this._player2.draw(renderer);
     this._ball?.draw(renderer);
-  }
-
-  private startRound(delay: number = 1.0) {
-    Timer.after(delay, () => {
-      this._state = GamePlayState.StartRound;
-      this._ball = newBall();
-      Timer.every(
-        0.1,
-        ROUND_DELAY,
-        () => {
-          this._ball.isVisible = this._ball.isVisible === false;
-        },
-        () => {
-          this._ball.isVisible = true;
-          this._state = GamePlayState.PlayRound;
-        }
-      );
-    });
-  }
-
-  private endRound(winner: Paddle) {
-    const hasWinner =
-      this._player1.score === GAME_POINTS ||
-      this._player2.score === GAME_POINTS;
-
-    if (hasWinner) {
-      endGame(
-        this._player1.score > this._player2.score ? Player.One : Player.Two
-      );
-    } else {
-      this._state = GamePlayState.EndRound;
-      winner.score += 1;
-      this.startRound();
-    }
-  }
-
-  private nextRound() {
-    this._delay = ROUND_DELAY;
-    this._ball = newBall();
   }
 
   start() {

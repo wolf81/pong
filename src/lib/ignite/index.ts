@@ -1,31 +1,29 @@
-export * from './timer';
+export * from "./timer";
 
-export * from './runloop'
+export * from "./runloop";
 
-export * from './renderer'
+export * from "./renderer";
 
-export *  from './scene_manager'
+export * from "./scene_manager";
 
-export * from './shape'
+export * from "./shape";
 
-export * from './xml_parser'
+export * from "./xml_parser";
 
-export * from './vector'
+export * from "./vector";
 
-export * from './tidy'
+export * from "./asset_loader";
 
-export * from './asset_loader'
+export * from "./assert";
 
-export * from './assert'
+export * from "./input_listener";
 
-export * from './input_listener'
+export * from "./service_locator";
 
-export * from './service_locator'
+export * from "./spritesheet";
 
-export * from './spritesheet'
+export * from "./sprite_animation";
 
-export * from './sprite_animation'
+export * from "./camera";
 
-export * from './camera'
-
-export * from './ecs'
+export * from "./ecs";
