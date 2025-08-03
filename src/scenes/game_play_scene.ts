@@ -153,6 +153,8 @@ export class GamePlayScene extends Scene {
         }
       }
     });
+
+    this.startRound(2.0);
   }
 
   override deinit(): void {
